@@ -1,0 +1,45 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card__header">
+    <div class="auth-card__icon"><img src="~/images/logo-gcs-blanco.png" alt="Global Customs Solutions" class="auth-card__logo" /></div>
+    <h1 class="auth-card__title">Global Customs Solutions</h1>
+    <p class="auth-card__subtitle">Levantamiento de Necesidades</p>
+</div>
+<div class="auth-card__body">
+    <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <div class="form-group">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" placeholder="ejemplo@empresa.com" autocomplete="username" autofocus />
+            <span asp-validation-for="Email" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">
+                <span>Contraseña</span>
+                <a asp-controller="Account" asp-action="ForgotPassword" class="form-link">¿Olvidaste tu contraseña?</a>
+            </label>
+            <div class="form-password-wrap">
+                <input asp-for="Password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+                <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Mostrar contraseña">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="field-validation-error"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+    </form>
+</div>
+<div class="auth-card__footer">Acceso restringido para personal autorizado.</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/password-toggle.js" asp-append-version="true"></script>
+}

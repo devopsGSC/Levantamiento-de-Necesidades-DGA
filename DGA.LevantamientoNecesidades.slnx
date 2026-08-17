@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DGA.Web/DGA.Web.csproj" />
+  </Folder>
+</Solution>

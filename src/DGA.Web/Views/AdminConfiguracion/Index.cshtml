@@ -1,0 +1,38 @@
+@model AdminConfiguracionIndexViewModel
+@{
+    ViewData["Title"] = "Panel de Administración — Configuración";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("configuracion")" />
+    <partial name="_ConfiguracionSubNav" model="@("general")" />
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <h3 style="margin:0 0 4px;font-size:16px;">Datos de Contacto</h3>
+        <p style="margin:0 0 14px;color:var(--dga-muted);font-size:13px;">Se muestran en el pie de página de todo el sitio.</p>
+        <form asp-action="GuardarContacto" method="post" class="form-grid">
+            @Html.AntiForgeryToken()
+            <div>
+                <label class="form-label">Teléfono</label>
+                <input type="text" name="soporteTelefono" value="@Model.SoporteTelefono" class="form-control" required />
+            </div>
+            <div>
+                <label class="form-label">Correo</label>
+                <input type="email" name="soporteCorreo" value="@Model.SoporteCorreo" class="form-control" required />
+            </div>
+            <div class="span-2">
+                <label class="form-label">Horario de Atención</label>
+                <input type="text" name="soporteHorario" value="@Model.SoporteHorario" class="form-control" required />
+            </div>
+            <div class="span-2" style="display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary">Guardar Datos de Contacto</button>
+            </div>
+        </form>
+    </div>
+
+    <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Cargos", RutaBase = "/Admin/Configuracion/Cargos", Items = Model.Cargos })" />
+    <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Prioridades", RutaBase = "/Admin/Configuracion/Prioridades", Items = Model.Prioridades })" />
+    <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Tipos de Aduana", RutaBase = "/Admin/Configuracion/TiposAduana", Items = Model.TiposAduana })" />
+</div>
+
+<partial name="_ModalEditarNombre" />

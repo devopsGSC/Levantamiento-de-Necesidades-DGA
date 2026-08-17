@@ -1,0 +1,17 @@
+@using System.Text.Json
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            dgaToast(@Html.Raw(JsonSerializer.Serialize(mensaje)), 'success');
+        });
+    </script>
+}
+@if (TempData["Error"] is string error)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            dgaToast(@Html.Raw(JsonSerializer.Serialize(error)), 'danger');
+        });
+    </script>
+}

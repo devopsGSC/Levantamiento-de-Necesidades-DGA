@@ -1,0 +1,145 @@
+@model AdminCatalogoAduanasViewModel
+@{
+    ViewData["Title"] = "Panel de Administración — Aduanas";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("configuracion")" />
+    <partial name="_ConfiguracionSubNav" model="@("aduanas")" />
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:16px;">
+            <div>
+                <h3 style="margin:0 0 4px;font-size:16px;">Agregar Aduana</h3>
+                <p style="margin:0;color:var(--dga-muted);font-size:13px;">El código y nombre aparecen tal cual en el combo "Nombre de Aduana" del formulario.</p>
+            </div>
+        </div>
+        <form asp-controller="AdminCatalogoAduanas" asp-action="Crear" method="post" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:end;">
+            @Html.AntiForgeryToken()
+            <div style="min-width:200px;">
+                <label class="form-label">Tipo de Aduana</label>
+                <select name="tipoAduanaId" class="form-control" required>
+                    @foreach (var t in Model.TiposAduanaOptions)
+                    {
+                        <option value="@t.Id" selected="@(Model.TipoFiltro == t.Id)">@t.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div style="min-width:120px;">
+                <label class="form-label">Código</label>
+                <input type="text" name="codigo" class="form-control" required />
+            </div>
+            <div style="min-width:220px;">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar</button>
+        </form>
+    </div>
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <form method="get" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+            <div style="min-width:220px;">
+                <label class="form-label">Filtrar por Tipo de Aduana</label>
+                <select name="tipo" class="form-control">
+                    <option value="">Todos</option>
+                    @foreach (var t in Model.TiposAduanaOptions)
+                    {
+                        <option value="@t.Id" selected="@(Model.TipoFiltro == t.Id)">@t.Nombre</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline">Filtrar</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="data-table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Código</th><th>Nombre</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model.Aduanas.Count == 0)
+                    {
+                        <tr><td colspan="4" style="text-align:center;color:var(--dga-muted);padding:28px;">No hay aduanas que coincidan con el filtro.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var a in Model.Aduanas)
+                        {
+                            <tr>
+                                <td style="font-weight:600;">@a.Codigo</td>
+                                <td>@a.Nombre</td>
+                                <td><span class="status-badge @(a.Activo ? "is-success" : "is-danger")">@(a.Activo ? "Activo" : "Inactivo")</span></td>
+                                <td>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                        <button type="button" class="btn btn-outline btn-sm js-editar-aduana"
+                                                data-action="/Admin/Configuracion/Aduanas/@a.Id/Editar" data-codigo="@a.Codigo" data-nombre="@a.Nombre">Editar</button>
+                                        <form method="post" action="/Admin/Configuracion/Aduanas/@a.Id/Activo"
+                                              data-confirm="@(a.Activo ? $"¿Desactivar \"{a.Codigo} - {a.Nombre}\"? Deja de ofrecerse en solicitudes nuevas." : $"¿Reactivar \"{a.Codigo} - {a.Nombre}\"?")">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="activo" value="@(!a.Activo)" />
+                                            <button type="submit" class="btn btn-outline btn-sm" style="color:@(a.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                                                @(a.Activo ? "Desactivar" : "Reactivar")
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-editar-aduana" hidden>
+    <div class="modal-box" style="max-width:420px;">
+        <form method="post" id="form-editar-aduana">
+            @Html.AntiForgeryToken()
+            <div class="modal-box__header">
+                <h3>Editar Aduana</h3>
+            </div>
+            <div class="modal-box__body">
+                <div class="form-group">
+                    <label class="form-label">Código</label>
+                    <input type="text" name="codigo" id="editar-aduana-codigo" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" name="nombre" id="editar-aduana-nombre" class="form-control" required />
+                </div>
+            </div>
+            <div class="modal-box__footer">
+                <button type="button" class="btn btn-outline" id="cerrar-editar-aduana">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var modal = document.getElementById('modal-editar-aduana');
+            var form = document.getElementById('form-editar-aduana');
+            var codigoInput = document.getElementById('editar-aduana-codigo');
+            var nombreInput = document.getElementById('editar-aduana-nombre');
+
+            document.querySelectorAll('.js-editar-aduana').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    form.action = btn.dataset.action;
+                    codigoInput.value = btn.dataset.codigo;
+                    nombreInput.value = btn.dataset.nombre;
+                    modal.hidden = false;
+                    codigoInput.focus();
+                });
+            });
+            document.getElementById('cerrar-editar-aduana').addEventListener('click', function () {
+                modal.hidden = true;
+            });
+        })();
+    </script>
+}

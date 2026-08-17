@@ -1,0 +1,56 @@
+<div class="modal-overlay" id="modal-editar-nombre" hidden>
+    <div class="modal-box" style="max-width:420px;">
+        <form method="post" id="form-editar-nombre">
+            @Html.AntiForgeryToken()
+            <div class="modal-box__header">
+                <h3 id="editar-nombre-titulo">Editar</h3>
+            </div>
+            <div class="modal-box__body">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" name="nombre" id="editar-nombre-input" class="form-control" required />
+                </div>
+                <div class="form-group" id="editar-nombre-detalle-wrap" hidden>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;">
+                        <input type="checkbox" name="tieneDetalle" id="editar-nombre-tienedetalle" value="true" />
+                        Tiene un 4º nivel (Detalle Específico)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-box__footer">
+                <button type="button" class="btn btn-outline" id="cerrar-editar-nombre">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    (function () {
+        var modal = document.getElementById('modal-editar-nombre');
+        var form = document.getElementById('form-editar-nombre');
+        var nombreInput = document.getElementById('editar-nombre-input');
+        var detalleWrap = document.getElementById('editar-nombre-detalle-wrap');
+        var detalleCheckbox = document.getElementById('editar-nombre-tienedetalle');
+        var titulo = document.getElementById('editar-nombre-titulo');
+
+        document.querySelectorAll('.js-editar-nombre').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                form.action = btn.dataset.action;
+                nombreInput.value = btn.dataset.nombre;
+                titulo.textContent = btn.dataset.titulo || 'Editar';
+                if (btn.dataset.tieneDetalle !== undefined) {
+                    detalleWrap.hidden = false;
+                    detalleCheckbox.checked = btn.dataset.tieneDetalle === 'true';
+                } else {
+                    detalleWrap.hidden = true;
+                    detalleCheckbox.checked = false;
+                }
+                modal.hidden = false;
+                nombreInput.focus();
+            });
+        });
+        document.getElementById('cerrar-editar-nombre').addEventListener('click', function () {
+            modal.hidden = true;
+        });
+    })();
+</script>

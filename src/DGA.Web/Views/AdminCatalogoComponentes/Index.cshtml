@@ -1,0 +1,171 @@
+@model List<AdminComponenteNodoViewModel>
+@{
+    ViewData["Title"] = "Panel de Administración — Componentes";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("configuracion")" />
+    <partial name="_ConfiguracionSubNav" model="@("componentes")" />
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <h3 style="margin:0 0 4px;font-size:16px;">Componentes</h3>
+        <p style="margin:0 0 14px;color:var(--dga-muted);font-size:13px;">
+            Cascada de 4 niveles del formulario de ítem: Componente → Subcomponente → Elemento → Detalle. Desplegá cada nivel para agregar o editar sus opciones.
+        </p>
+        <form asp-controller="AdminCatalogoComponentes" asp-action="CrearComponente" method="post" style="display:flex;gap:8px;">
+            @Html.AntiForgeryToken()
+            <input type="text" name="nombre" class="form-control" placeholder="Nombre del nuevo Componente..." required style="max-width:320px;" />
+            <button type="submit" class="btn btn-primary btn-sm">Agregar Componente</button>
+        </form>
+    </div>
+
+    @foreach (var componente in Model)
+    {
+        <details class="card" style="padding:16px 20px;margin-bottom:12px;" open>
+            <summary style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;">
+                <span style="font-weight:600;font-size:14.5px;">
+                    @componente.Nombre
+                    @if (!componente.Activo)
+                    {
+                        <span class="status-badge is-danger" style="margin-left:8px;">Inactivo</span>
+                    }
+                </span>
+                <span style="display:flex;gap:8px;" onclick="event.preventDefault()">
+                    <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
+                            data-action="/Admin/Configuracion/Componentes/@componente.Id/Editar" data-nombre="@componente.Nombre" data-titulo="Editar Componente">Editar</button>
+                    <form method="post" action="/Admin/Configuracion/Componentes/@componente.Id/Activo"
+                          data-confirm="@(componente.Activo ? $"¿Desactivar el componente \"{componente.Nombre}\"?" : $"¿Reactivar \"{componente.Nombre}\"?")">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="activo" value="@(!componente.Activo)" />
+                        <button type="submit" class="btn btn-outline btn-sm" style="color:@(componente.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                            @(componente.Activo ? "Desactivar" : "Reactivar")
+                        </button>
+                    </form>
+                </span>
+            </summary>
+
+            <div style="margin-top:14px;padding-left:16px;border-left:2px solid var(--dga-border);">
+                <form asp-controller="AdminCatalogoComponentes" asp-action="CrearSubcomponente" method="post" style="display:flex;gap:8px;margin-bottom:12px;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="componenteId" value="@componente.Id" />
+                    <input type="text" name="nombre" class="form-control" placeholder="Nombre del nuevo Subcomponente..." required style="max-width:320px;" />
+                    <button type="submit" class="btn btn-outline btn-sm">Agregar Subcomponente</button>
+                </form>
+
+                @foreach (var sub in componente.Subcomponentes)
+                {
+                    <details style="margin-bottom:10px;" open>
+                        <summary style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;">
+                            <span style="font-size:13.5px;">
+                                @sub.Nombre
+                                @if (!sub.Activo)
+                                {
+                                    <span class="status-badge is-danger" style="margin-left:8px;">Inactivo</span>
+                                }
+                            </span>
+                            <span style="display:flex;gap:8px;" onclick="event.preventDefault()">
+                                <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
+                                        data-action="/Admin/Configuracion/Componentes/Subcomponentes/@sub.Id/Editar" data-nombre="@sub.Nombre" data-titulo="Editar Subcomponente">Editar</button>
+                                <form method="post" action="/Admin/Configuracion/Componentes/Subcomponentes/@sub.Id/Activo"
+                                      data-confirm="@(sub.Activo ? $"¿Desactivar \"{sub.Nombre}\"?" : $"¿Reactivar \"{sub.Nombre}\"?")">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="activo" value="@(!sub.Activo)" />
+                                    <button type="submit" class="btn btn-outline btn-sm" style="color:@(sub.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                                        @(sub.Activo ? "Desactivar" : "Reactivar")
+                                    </button>
+                                </form>
+                            </span>
+                        </summary>
+
+                        <div style="margin-top:10px;padding-left:16px;border-left:2px solid var(--dga-border);">
+                            <form asp-controller="AdminCatalogoComponentes" asp-action="CrearElemento" method="post" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="subcomponenteId" value="@sub.Id" />
+                                <input type="text" name="nombre" class="form-control" placeholder="Nombre del nuevo Elemento..." required style="max-width:280px;" />
+                                <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--dga-muted);">
+                                    <input type="checkbox" name="tieneDetalle" value="true" /> Tiene Detalle
+                                </label>
+                                <button type="submit" class="btn btn-outline btn-sm">Agregar Elemento</button>
+                            </form>
+
+                            @foreach (var elem in sub.Elementos)
+                            {
+                                <div style="margin-bottom:10px;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                                        <span style="font-size:13px;">
+                                            @elem.Nombre
+                                            @if (elem.TieneDetalle)
+                                            {
+                                                <span class="status-badge" style="margin-left:8px;font-size:10.5px;">Tiene Detalle</span>
+                                            }
+                                            @if (!elem.Activo)
+                                            {
+                                                <span class="status-badge is-danger" style="margin-left:8px;">Inactivo</span>
+                                            }
+                                        </span>
+                                        <span style="display:flex;gap:8px;">
+                                            <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
+                                                    data-action="/Admin/Configuracion/Componentes/Elementos/@elem.Id/Editar" data-nombre="@elem.Nombre"
+                                                    data-tiene-detalle="@(elem.TieneDetalle ? "true" : "false")" data-titulo="Editar Elemento">Editar</button>
+                                            <form method="post" action="/Admin/Configuracion/Componentes/Elementos/@elem.Id/Activo"
+                                                  data-confirm="@(elem.Activo ? $"¿Desactivar \"{elem.Nombre}\"?" : $"¿Reactivar \"{elem.Nombre}\"?")">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="activo" value="@(!elem.Activo)" />
+                                                <button type="submit" class="btn btn-outline btn-sm" style="color:@(elem.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                                                    @(elem.Activo ? "Desactivar" : "Reactivar")
+                                                </button>
+                                            </form>
+                                        </span>
+                                    </div>
+
+                                    @if (elem.TieneDetalle)
+                                    {
+                                        <div style="margin-top:8px;padding-left:16px;border-left:2px solid var(--dga-border);">
+                                            <form asp-controller="AdminCatalogoComponentes" asp-action="CrearDetalle" method="post" style="display:flex;gap:8px;margin-bottom:10px;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="elementoId" value="@elem.Id" />
+                                                <input type="text" name="nombre" class="form-control" placeholder="Nombre del nuevo Detalle..." required style="max-width:260px;" />
+                                                <button type="submit" class="btn btn-outline btn-sm">Agregar Detalle</button>
+                                            </form>
+                                            @if (elem.Detalles.Count > 0)
+                                            {
+                                                <ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
+                                                    @foreach (var det in elem.Detalles)
+                                                    {
+                                                        <li style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;">
+                                                            <span>
+                                                                @det.Nombre
+                                                                @if (!det.Activo)
+                                                                {
+                                                                    <span class="status-badge is-danger" style="margin-left:8px;">Inactivo</span>
+                                                                }
+                                                            </span>
+                                                            <span style="display:flex;gap:6px;">
+                                                                <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
+                                                                        data-action="/Admin/Configuracion/Componentes/Detalles/@det.Id/Editar" data-nombre="@det.Nombre" data-titulo="Editar Detalle">Editar</button>
+                                                                <form method="post" action="/Admin/Configuracion/Componentes/Detalles/@det.Id/Activo"
+                                                                      data-confirm="@(det.Activo ? $"¿Desactivar \"{det.Nombre}\"?" : $"¿Reactivar \"{det.Nombre}\"?")">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="activo" value="@(!det.Activo)" />
+                                                                    <button type="submit" class="btn btn-outline btn-sm" style="color:@(det.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                                                                        @(det.Activo ? "Desactivar" : "Reactivar")
+                                                                    </button>
+                                                                </form>
+                                                            </span>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </details>
+                }
+            </div>
+        </details>
+    }
+</div>
+
+<partial name="_ModalEditarNombre" />

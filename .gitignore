@@ -1,0 +1,23 @@
+## .NET / Visual Studio build output
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Datos de runtime (los genera la app al arrancar, no son código fuente)
+src/DGA.Web/App_Data/fotografias/
+src/DGA.Web/App_Data/reportes/
+
+## Material de referencia de la migración (no forma parte de la app .NET)
+source-original/
+
+## Artefactos de herramientas (Claude Code / Playwright MCP)
+.playwright-mcp/
+.claude/settings.local.json
+
+## SO
+.DS_Store
+Thumbs.db

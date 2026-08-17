@@ -1,0 +1,229 @@
+@using System.Security.Claims
+@using DGA.Web.Data
+@inject ApplicationDbContext Db
+@{
+    var nombreUsuario = User.FindFirstValue(ClaimTypes.GivenName) ?? User.Identity?.Name ?? "Usuario";
+    var esAdmin = User.IsInRole(DGA.Web.Data.Entities.Roles.Administrador);
+    var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString();
+    var configuracion = await Db.ConfiguracionSistema.FindAsync(1);
+
+    var breadcrumbItems = new List<(string Label, string? Url)>();
+    switch (controladorActual)
+    {
+        case "Solicitudes":
+            breadcrumbItems.Add(("Mis Solicitudes", null));
+            break;
+        case "Dashboard":
+            breadcrumbItems.Add(("Dashboard", null));
+            break;
+        case "AdminSolicitudes":
+        case "Admin":
+            breadcrumbItems.Add(("Panel Admin", "/Admin/Solicitudes"));
+            breadcrumbItems.Add(("Solicitudes", null));
+            break;
+        case "AdminUsuarios":
+            breadcrumbItems.Add(("Panel Admin", "/Admin/Solicitudes"));
+            breadcrumbItems.Add(("Usuarios", null));
+            break;
+        case "AdminCatalogoAduanas":
+            breadcrumbItems.Add(("Panel Admin", "/Admin/Solicitudes"));
+            breadcrumbItems.Add(("Catálogo de Aduanas", null));
+            break;
+        case "AdminCatalogoComponentes":
+            breadcrumbItems.Add(("Panel Admin", "/Admin/Solicitudes"));
+            breadcrumbItems.Add(("Catálogo de Componentes", null));
+            break;
+        case "AdminConfiguracion":
+            breadcrumbItems.Add(("Panel Admin", "/Admin/Solicitudes"));
+            breadcrumbItems.Add(("Configuración", null));
+            break;
+        case "AdminReportes":
+            breadcrumbItems.Add(("Panel Admin", "/Admin/Solicitudes"));
+            breadcrumbItems.Add(("Reportes", null));
+            break;
+    }
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
+    <title>@ViewData["Title"] — Global Customs Solutions</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="dga-header">
+        <input type="checkbox" id="dga-mobile-toggle" class="dga-mobile-toggle" hidden />
+        <div class="dga-header__bar">
+            <div class="dga-header__left">
+                <a asp-controller="Home" asp-action="Index" class="dga-brand">
+                    <span class="dga-brand__icon-box">
+                        <img src="~/images/logo-gcs-blanco.png" alt="Global Customs Solutions" class="dga-brand__logo" />
+                    </span>
+                    <span class="dga-brand__text">
+                        <span class="dga-brand__subtitle">Levantamiento de Necesidades</span>
+                    </span>
+                </a>
+                <ul class="dga-nav">
+                    <li><a asp-controller="Home" asp-action="Index" class="dga-nav__link @(controladorActual == "Home" ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg> Inicio</a></li>
+                    <li><a asp-controller="Solicitudes" asp-action="Index" class="dga-nav__link @(controladorActual == "Solicitudes" ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg> Mis Solicitudes</a></li>
+                    @if (esAdmin)
+                    {
+                        var esControladorAdmin = controladorActual is "Admin" or "AdminSolicitudes" or "AdminUsuarios";
+                        <li><a asp-controller="Dashboard" asp-action="Index" class="dga-nav__link @(controladorActual == "Dashboard" ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg> Dashboard</a></li>
+                        <li><a href="/Admin/Solicitudes" class="dga-nav__link @(esControladorAdmin ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg> Admin</a></li>
+                    }
+                </ul>
+            </div>
+            <div class="dga-header__right">
+                <div class="dga-header__right-desktop">
+                    <a asp-controller="Solicitudes" asp-action="Create" class="btn btn-primary btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg> Nueva Solicitud</a>
+                    <div class="dga-user-badge">
+                        <span class="dga-user-badge__avatar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                        </span>
+                        <span>
+                            <span class="dga-user-badge__name" style="display:block;">@nombreUsuario</span>
+                            <span class="dga-user-badge__role">@(esAdmin ? "Administrador" : "Usuario")</span>
+                        </span>
+                    </div>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="btn btn-outline btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></svg> Salir</button>
+                    </form>
+                </div>
+                <label for="dga-mobile-toggle" class="dga-mobile-btn" aria-label="Abrir menú de navegación">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </label>
+            </div>
+        </div>
+
+        @if (breadcrumbItems.Count > 0)
+        {
+            <div class="dga-breadcrumbs">
+                <div class="dga-breadcrumbs__inner">
+                    <nav aria-label="Breadcrumb">
+                        <ol>
+                            <li><a asp-controller="Home" asp-action="Index">Inicio</a><span class="dga-breadcrumbs__sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></span></li>
+                            @for (var i = 0; i < breadcrumbItems.Count; i++)
+                            {
+                                var (label, url) = breadcrumbItems[i];
+                                var esUltimo = i == breadcrumbItems.Count - 1;
+                                <li>
+                                    @if (esUltimo)
+                                    {
+                                        <span class="dga-breadcrumbs__current" aria-current="page">@label</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="@url">@label</a>
+                                        <span class="dga-breadcrumbs__sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></span>
+                                    }
+                                </li>
+                            }
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        }
+
+        <label for="dga-mobile-toggle" class="dga-mobile-backdrop" aria-hidden="true"></label>
+        <div class="dga-mobile-panel">
+            <div class="dga-mobile-panel__header">
+                <span>Navegación</span>
+                <label for="dga-mobile-toggle" class="dga-mobile-panel__close" aria-label="Cerrar menú">&times;</label>
+            </div>
+            <nav class="dga-mobile-panel__nav" aria-label="Navegación móvil">
+                <a asp-controller="Solicitudes" asp-action="Create" class="btn btn-primary btn-block"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg> Nueva Solicitud</a>
+                <a asp-controller="Home" asp-action="Index" class="dga-nav__link @(controladorActual == "Home" ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg> Inicio</a>
+                <a asp-controller="Solicitudes" asp-action="Index" class="dga-nav__link @(controladorActual == "Solicitudes" ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg> Mis Solicitudes</a>
+                @if (esAdmin)
+                {
+                    var esControladorAdminMobile = controladorActual is "Admin" or "AdminSolicitudes" or "AdminUsuarios";
+                    <a asp-controller="Dashboard" asp-action="Index" class="dga-nav__link @(controladorActual == "Dashboard" ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg> Dashboard</a>
+                    <a href="/Admin/Solicitudes" class="dga-nav__link @(esControladorAdminMobile ? "active" : "")"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg> Admin</a>
+                }
+            </nav>
+            <div class="dga-mobile-panel__footer">
+                <div class="dga-user-badge">
+                    <span class="dga-user-badge__avatar">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    </span>
+                    <span>
+                        <span class="dga-user-badge__name" style="display:block;">@nombreUsuario</span>
+                        <span class="dga-user-badge__role">@(esAdmin ? "Administrador" : "Usuario")</span>
+                    </span>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="btn btn-outline btn-block"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></svg> Salir</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <partial name="_FlashMessages" />
+        @RenderBody()
+    </main>
+
+    <footer class="dga-footer">
+        <div class="dga-footer__grid">
+            <div>
+                <div class="dga-footer__brand">
+                    <span class="dga-footer__logo-box">
+                        <img src="~/images/logo-gcs-blanco.png" alt="Global Customs Solutions" class="dga-footer__logo" />
+                    </span>
+                    <span class="dga-footer__brand-text">Global Customs Solutions</span>
+                </div>
+                <p>Sistema centralizado para el levantamiento y gestión de necesidades de infraestructura y equipamiento.</p>
+            </div>
+            <div>
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Contacto</h4>
+                <ul class="dga-footer__contact">
+                    <li><svg class="dga-footer__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg> <span>Global Customs Solutions</span></li>
+                    <li><svg class="dga-footer__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></svg> <span>@configuracion?.SoporteTelefono</span></li>
+                    <li><svg class="dga-footer__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /><rect x="2" y="4" width="20" height="16" rx="2" /></svg> <span>@configuracion?.SoporteCorreo</span></li>
+                    <li><svg class="dga-footer__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg> <span>@configuracion?.SoporteHorario</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="dga-footer__bottom">© @DateTime.UtcNow.Year Global Customs Solutions. Todos los derechos reservados.</div>
+    </footer>
+
+    <div class="lightbox-overlay" id="dga-lightbox" hidden>
+        <button type="button" class="lightbox-overlay__close" id="dga-lightbox-close" aria-label="Cerrar">&times;</button>
+        <img id="dga-lightbox-img" alt="" />
+    </div>
+
+    <div class="modal-overlay" id="dga-confirm" hidden>
+        <div class="modal-box" style="max-width:420px;">
+            <div class="modal-box__header has-icon">
+                <div class="modal-icon" id="dga-confirm-icon"></div>
+                <div>
+                    <h3 id="dga-confirm-title">Confirmar acción</h3>
+                    <p id="dga-confirm-body">-</p>
+                </div>
+            </div>
+            <div class="modal-box__footer">
+                <button type="button" class="btn btn-outline" id="dga-confirm-cancel">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="dga-confirm-ok">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-stack" id="dga-toast-stack"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/lightbox.js" asp-append-version="true"></script>
+    <script src="~/js/loading.js" asp-append-version="true"></script>
+    <script src="~/js/dialogs.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

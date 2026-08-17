@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Carga Masiva de Usuarios";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("usuarios")" />
+
+    <div class="card" style="max-width:620px;padding:28px 30px;">
+        <h3 style="margin:0 0 4px;font-size:17px;">Carga Masiva de Usuarios</h3>
+        <p style="margin:0 0 20px;color:var(--dga-muted);font-size:13px;">
+            Descargá la plantilla, completá una fila por usuario y subí el archivo. Se enviará un correo automático
+            con las credenciales a cada usuario creado.
+        </p>
+
+        <a asp-action="DescargarPlantillaCargaMasiva" class="btn btn-outline" style="margin-bottom:24px;">
+            Descargar Plantilla Excel
+        </a>
+
+        <form asp-action="CargaMasiva" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="form-label">Archivo Excel (.xlsx)</label>
+                <input type="file" name="archivo" class="form-control" accept=".xlsx" required />
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <a asp-action="Index" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Subir Archivo</button>
+            </div>
+        </form>
+    </div>
+</div>

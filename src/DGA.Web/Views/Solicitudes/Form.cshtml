@@ -1,0 +1,222 @@
+@using System.Text.Json
+@model SolicitudFormViewModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Solicitud" : "Nueva Solicitud";
+    var bootstrap = JsonSerializer.Serialize(new
+    {
+        esEdicion = Model.EsEdicion,
+        tipoAduanaId = Model.TipoAduanaId,
+        aduanaId = Model.AduanaId,
+        itemsExistentes = JsonSerializer.Deserialize<object>(Model.ItemsExistentesJson),
+    });
+}
+
+<div class="container-page" style="padding-top:28px;padding-bottom:32px;">
+    <h1 class="section-title">@(Model.EsEdicion ? "Editar Solicitud de Necesidades" : "Nueva Solicitud de Necesidades")</h1>
+
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="margin-bottom:16px;"></div>
+
+    <form id="solicitud-form" asp-controller="Solicitudes" asp-action="Guardar" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="IdSolicitud" />
+        <input type="hidden" id="ItemsJson" name="ItemsJson" value="[]" />
+        <input type="hidden" id="Accion" name="Accion" value="borrador" />
+
+        <!-- ============ 1. Información General ============ -->
+        <div class="card form-section" id="seccion-general" style="padding:22px 24px;">
+            <div class="form-section__header">
+                <h2>1. Información General</h2>
+                <button type="button" id="btn-toggle-general" class="icon-toggle-btn"></button>
+            </div>
+            <div class="form-grid" id="campos-general">
+                <div>
+                    <label class="form-label">ID Solicitud *</label>
+                    <input type="text" class="form-control" value="@Model.IdSolicitud" readonly style="background:var(--dga-bg);font-family:ui-monospace,monospace;" />
+                </div>
+                <div>
+                    <label asp-for="NombreResponsable" class="form-label">Nombre Solicitante *</label>
+                    <input asp-for="NombreResponsable" class="form-control" />
+                    <span asp-validation-for="NombreResponsable" class="field-validation-error"></span>
+                </div>
+                <div>
+                    <label asp-for="CargoId" class="form-label">Cargo *</label>
+                    <select asp-for="CargoId" class="form-control">
+                        <option value="">Seleccione</option>
+                        @foreach (var c in Model.CargoOptions)
+                        {
+                            <option value="@c.Id">@c.Nombre</option>
+                        }
+                    </select>
+                    <span asp-validation-for="CargoId" class="field-validation-error"></span>
+                </div>
+                <div></div>
+                <div>
+                    <label asp-for="TipoAduanaId" class="form-label">Tipo de Aduana *</label>
+                    <select asp-for="TipoAduanaId" id="TipoAduanaId" class="form-control">
+                        <option value="">Seleccionar Aduana</option>
+                        @foreach (var t in Model.TipoAduanaOptions)
+                        {
+                            <option value="@t.Id">@t.Nombre</option>
+                        }
+                    </select>
+                    <span asp-validation-for="TipoAduanaId" class="field-validation-error"></span>
+                </div>
+                <div>
+                    <label asp-for="AduanaId" class="form-label">Nombre de Aduana *</label>
+                    <select asp-for="AduanaId" id="AduanaId" class="form-control" disabled>
+                        <option value="">Seleccionar Aduana</option>
+                    </select>
+                    <span asp-validation-for="AduanaId" class="field-validation-error"></span>
+                </div>
+                <div class="span-2">
+                    <label asp-for="JustificacionGeneral" class="form-label">Justificación General *</label>
+                    <textarea asp-for="JustificacionGeneral" class="form-control"></textarea>
+                    <span asp-validation-for="JustificacionGeneral" class="field-validation-error"></span>
+                </div>
+                <div class="span-2">
+                    <label asp-for="ObservacionesGenerales" class="form-label"></label>
+                    <textarea asp-for="ObservacionesGenerales" class="form-control"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 2. Formulario de Ítem ============ -->
+        <div class="card form-section is-locked" id="seccion-item" style="padding:22px 24px;">
+            <div class="form-section__header">
+                <h2>2. Formulario de Ítem</h2>
+            </div>
+            <div class="form-grid" id="campos-item">
+                <div>
+                    <label class="form-label">Componente *</label>
+                    <select id="ComponenteId" class="form-control">
+                        <option value="">Seleccionar Componente principal</option>
+                        @foreach (var c in Model.ComponenteOptions)
+                        {
+                            <option value="@c.Id">@c.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Subcomponente *</label>
+                    <select id="SubcomponenteId" class="form-control" disabled>
+                        <option value="">No aplica / Sin opciones</option>
+                    </select>
+                </div>
+                <div id="wrap-elemento-select">
+                    <label class="form-label">Elemento / Necesidad *</label>
+                    <select id="ElementoId" class="form-control" disabled>
+                        <option value="">Seleccione elemento específico</option>
+                    </select>
+                </div>
+                <div id="wrap-elemento-checklist" hidden class="span-2">
+                    <label class="form-label">Elemento / Necesidad *</label>
+                    <input type="text" id="elemento-checklist-buscar" class="form-control" placeholder="Buscar elemento..." autocomplete="off" style="margin-bottom:8px;" />
+                    <div class="elemento-checklist" id="elemento-checklist"></div>
+                    <div class="elemento-checklist__vacio" id="elemento-checklist-vacio" hidden>Sin resultados para esa búsqueda.</div>
+                </div>
+                <div id="wrap-elemento-libre" hidden>
+                    <label class="form-label">Elemento / Necesidad *</label>
+                    <input type="text" id="ElementoLibre" class="form-control" placeholder="Detalle exactamente lo que necesita" />
+                </div>
+                <div id="wrap-detalle" hidden>
+                    <label class="form-label">Detalle Específico *</label>
+                    <select id="DetalleId" class="form-control">
+                        <option value="">Seleccione el detalle exacto requerido</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Cantidad Requerida</label>
+                    <input type="number" id="CantidadSolicitada" class="form-control" value="1" min="1" />
+                </div>
+                <div>
+                    <label class="form-label">Prioridad</label>
+                    <select id="PrioridadId" class="form-control">
+                        @foreach (var p in Model.PrioridadOptions)
+                        {
+                            <option value="@p.Id" selected="@(p.Nombre == "Media")">@p.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Ubicación Específica</label>
+                    <input type="text" id="UbicacionEspecifica" class="form-control" placeholder="Ej: Sala principal, Oficina 2, etc." />
+                </div>
+                <div class="span-2">
+                    <label class="form-label">Justificación del Ítem</label>
+                    <textarea id="JustificacionItem" class="form-control" placeholder="Justifique por qué se necesita este ítem específico"></textarea>
+                </div>
+                <div class="span-2">
+                    <label class="form-label">Fotografías del Ítem</label>
+                    <div class="dropzone" id="dropzone">
+                        Arrastrá tus fotos aquí o hacé clic para explorar<br />
+                        <small>JPG, PNG, GIF, WebP (Max 10MB). Hasta 10 fotos por ítem.</small>
+                    </div>
+                    <input type="file" id="input-fotos" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden />
+                    <div class="photo-chips" id="photo-chips"></div>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+                <button type="button" id="btn-agregar-item" class="btn btn-primary">Guardar Ítem en la Lista</button>
+            </div>
+        </div>
+
+        <!-- ============ 3. Ítems Agregados ============ -->
+        <div class="card form-section" style="padding:22px 24px;">
+            <div class="form-section__header">
+                <h2>3. Ítems Agregados (<span id="contador-items">0</span>)</h2>
+            </div>
+            <div class="item-table-wrap">
+                <table class="item-table" id="tabla-items">
+                    <thead>
+                        <tr>
+                            <th>Nº</th><th>Prioridad</th><th>Componente &amp; Subcomponente</th><th>Elemento</th>
+                            <th>Ubicación</th><th>Cant.</th><th>Fotos</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-items-body">
+                        <tr id="fila-vacia"><td colspan="8" class="muted" style="text-align:center;padding:20px;">No hay ítems agregados</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="sticky-actions">
+            <a asp-action="Index" class="btn btn-outline">Cancelar</a>
+            <div style="display:flex;gap:10px;">
+                <button type="button" id="btn-guardar-borrador" class="btn btn-outline">Guardar como Borrador</button>
+                <button type="button" id="btn-finalizar" class="btn btn-primary" disabled>Finalizar Solicitud</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de confirmación al finalizar -->
+<div class="modal-overlay" id="modal-confirmar" hidden>
+    <div class="modal-box">
+        <div class="modal-box__header">
+            <h3>Confirmar envío de solicitud</h3>
+            <p>Revisá la información antes de enviar. Una vez enviada, el administrador podrá cambiar su estado.</p>
+        </div>
+        <div class="modal-box__body">
+            <div class="summary-row"><span>Responsable</span><strong id="resumen-responsable">-</strong></div>
+            <div class="summary-row"><span>Aduana</span><strong id="resumen-aduana">-</strong></div>
+            <div class="summary-row"><span>Ítems</span><strong id="resumen-items">0</strong></div>
+            <label class="confirm-checkbox">
+                <input type="checkbox" id="check-confirmo" />
+                <span>Confirmo que revisé la información y deseo enviar esta solicitud.</span>
+            </label>
+        </div>
+        <div class="modal-box__footer">
+            <button type="button" class="btn btn-outline" id="btn-cerrar-modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" id="btn-confirmar-envio" disabled>Confirmar y Guardar</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>window.__solicitudBootstrap = @Html.Raw(bootstrap);</script>
+    <script src="~/js/combo-buscable.js" asp-append-version="true"></script>
+    <script src="~/js/solicitud-form.js" asp-append-version="true"></script>
+}

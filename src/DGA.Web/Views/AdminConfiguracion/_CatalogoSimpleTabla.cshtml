@@ -1,0 +1,46 @@
+@model CatalogoSimpleSeccionViewModel
+<div class="card" style="padding:20px 22px;margin-bottom:16px;">
+    <h3 style="margin:0 0 14px;font-size:15px;">@Model.Titulo</h3>
+    <div class="data-table-wrap">
+        <table class="data-table" style="margin-bottom:14px;">
+            <thead>
+                <tr><th>Nombre</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Count == 0)
+                {
+                    <tr><td colspan="3" style="text-align:center;color:var(--dga-muted);padding:16px;">Sin registros todavía.</td></tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Nombre</td>
+                            <td><span class="status-badge @(item.Activo ? "is-success" : "is-danger")">@(item.Activo ? "Activo" : "Inactivo")</span></td>
+                            <td>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
+                                            data-action="@Model.RutaBase/@item.Id/Editar" data-nombre="@item.Nombre" data-titulo="Editar @Model.Titulo">Editar</button>
+                                    <form method="post" action="@Model.RutaBase/@item.Id/Activo"
+                                          data-confirm="@(item.Activo ? $"¿Desactivar \"{item.Nombre}\"? Deja de ofrecerse en solicitudes nuevas." : $"¿Reactivar \"{item.Nombre}\"?")">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="activo" value="@(!item.Activo)" />
+                                        <button type="submit" class="btn btn-outline btn-sm" style="color:@(item.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                                            @(item.Activo ? "Desactivar" : "Reactivar")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <form method="post" action="@Model.RutaBase/Crear" style="display:flex;gap:8px;flex-wrap:wrap;">
+        @Html.AntiForgeryToken()
+        <input type="text" name="nombre" class="form-control" placeholder="Nombre nuevo..." required style="max-width:280px;" />
+        <button type="submit" class="btn btn-primary btn-sm">Agregar</button>
+    </form>
+</div>

@@ -1,0 +1,73 @@
+@model AdminSolicitudIndexViewModel
+@{
+    ViewData["Title"] = "Panel de Administración — Solicitudes";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("solicitudes")" />
+
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <h3 style="margin:0 0 4px;font-size:16px;">Gestión de Solicitudes</h3>
+        <p style="margin:0 0 16px;color:var(--dga-muted);font-size:13px;">Visualiza, filtra y administra todas las solicitudes registradas en el sistema.</p>
+        <form method="get" class="admin-toolbar">
+            <div style="flex:1;min-width:220px;">
+                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar ID, componente..." />
+            </div>
+            <select name="estado" class="form-control" style="max-width:220px;">
+                <option value="">Todos</option>
+                @foreach (var opcion in Model.EstadoOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.EstadoFiltro == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-outline">Filtrar</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="data-table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Componente</th><th>Elemento</th><th>Detalle</th><th>Estado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Solicitudes.Count == 0)
+                    {
+                        <tr><td colspan="6" style="text-align:center;color:var(--dga-muted);padding:28px;">No hay solicitudes que coincidan con el filtro.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var s in Model.Solicitudes)
+                        {
+                            <tr>
+                                <td style="font-weight:600;">@s.IdSolicitud</td>
+                                <td>@s.Componente</td>
+                                <td>@s.Elemento</td>
+                                <td>@s.Detalle</td>
+                                <td><span class="status-badge">@s.Estado</span></td>
+                                <td>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                        <a asp-action="DescargarPdf" asp-route-id="@s.Id" class="btn btn-outline btn-sm" title="Descargar PDF">PDF</a>
+                                        <a asp-action="Details" asp-route-id="@s.Id" class="btn btn-outline btn-sm">Detalles</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span>Mostrando página @Model.PaginaActual de @Model.TotalPaginas (@Model.TotalResultados resultados)</span>
+            <div style="display:flex;gap:8px;">
+                <a class="btn btn-outline btn-sm @(Model.PaginaActual <= 1 ? "disabled" : "")"
+                   asp-action="Index" asp-route-pagina="@(Model.PaginaActual - 1)" asp-route-busqueda="@Model.Busqueda" asp-route-estado="@Model.EstadoFiltro">Anterior</a>
+                <a class="btn btn-outline btn-sm @(Model.PaginaActual >= Model.TotalPaginas ? "disabled" : "")"
+                   asp-action="Index" asp-route-pagina="@(Model.PaginaActual + 1)" asp-route-busqueda="@Model.Busqueda" asp-route-estado="@Model.EstadoFiltro">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</div>

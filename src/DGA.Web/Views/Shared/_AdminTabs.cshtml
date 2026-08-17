@@ -1,0 +1,11 @@
+@model string
+<div class="admin-header">
+    <h1>Panel de Administración</h1>
+    <p>Gestiona usuarios, solicitudes y configuraciones globales del sistema.</p>
+</div>
+<div class="admin-tabs">
+    <a href="/Admin/Solicitudes" class="admin-tab @(Model == "solicitudes" ? "active" : "")">Solicitudes</a>
+    <a href="/Admin/Usuarios" class="admin-tab @(Model == "usuarios" ? "active" : "")">Usuarios</a>
+    <a href="/Admin/Reportes" class="admin-tab @(Model == "reportes" ? "active" : "")">Reportes</a>
+    <a href="/Admin/Configuracion" class="admin-tab @(Model == "configuracion" ? "active" : "")">Configuración</a>
+</div>

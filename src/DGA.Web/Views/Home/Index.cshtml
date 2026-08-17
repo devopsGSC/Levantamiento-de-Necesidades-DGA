@@ -1,0 +1,119 @@
+@model HomeIndexViewModel
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="hero-band">
+    <div class="container-page">
+        <section class="hero">
+            <div>
+                <h1>Levantamiento de Necesidades <span class="accent">Sistematizado</span></h1>
+                <p>Gestione y dé seguimiento a los requerimientos de infraestructura, equipamiento y personal para su aduana de forma centralizada.</p>
+                <div class="hero-actions">
+                    <a asp-controller="Solicitudes" asp-action="Create" class="btn btn-primary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg> Nueva Solicitud</a>
+                    <a asp-controller="Solicitudes" asp-action="Index" class="btn btn-outline">Ver Mis Solicitudes</a>
+                </div>
+            </div>
+            <div class="hero-cards">
+                <a asp-controller="Solicitudes" asp-action="Create" class="action-card" style="text-decoration:none;">
+                    <div class="action-card__top">
+                        <span class="action-card__icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>
+                        </span>
+                        <svg class="action-card__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                    </div>
+                    <h3>Crear Solicitud</h3>
+                    <p>Inicie un nuevo requerimiento</p>
+                </a>
+                <div class="hero-cards__row">
+                    <a asp-controller="Solicitudes" asp-action="Index" class="card quick-card" style="text-decoration:none;color:inherit;">
+                        <span class="quick-card__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg>
+                        </span>
+                        <h3>Historial</h3>
+                        <p>Ver mis solicitudes</p>
+                    </a>
+                    <div class="card quick-card is-muted">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                        <span>Sistema activo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="container-page">
+    <section>
+        <h2 class="section-title">Resumen de Actividad</h2>
+        <div class="stats-grid">
+            <div class="card stat-card">
+                <span class="stat-card__icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+                </span>
+                <span>
+                    <span class="stat-card__value">@Model.TotalSolicitudes</span>
+                    <div class="stat-card__label">Total Solicitudes</div>
+                </span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-card__icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </span>
+                <span>
+                    <span class="stat-card__value">@Model.EnBorrador</span>
+                    <div class="stat-card__label">En Borrador</div>
+                </span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-card__icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                </span>
+                <span>
+                    <span class="stat-card__value">@Model.EnTramite</span>
+                    <div class="stat-card__label">En Trámite</div>
+                </span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-card__icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                </span>
+                <span>
+                    <span class="stat-card__value">@Model.Finalizadas</span>
+                    <div class="stat-card__label">Finalizadas</div>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2 class="section-title">Solicitudes Recientes</h2>
+        <div class="recent-list">
+            @if (Model.Recientes.Count == 0)
+            {
+                <div class="card" style="padding:28px;text-align:center;color:var(--dga-muted);">
+                    No hay solicitudes registradas todavía.
+                </div>
+            }
+            else
+            {
+                foreach (var item in Model.Recientes)
+                {
+                    <div class="card recent-item">
+                        <div>
+                            <div class="recent-item__meta">
+                                <span class="status-badge">#@item.IdSolicitud</span>
+                                <span class="status-badge">@item.Estado</span>
+                            </div>
+                            <p class="recent-item__title">@(item.ComponentePrincipal ?? "-")</p>
+                            <div class="recent-item__sub">
+                                <span>@item.Aduana</span>
+                                <span>@item.FechaRegistro.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+</div>

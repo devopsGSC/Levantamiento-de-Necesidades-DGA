@@ -1,0 +1,174 @@
+@model AdminUsuarioIndexViewModel
+@{
+    ViewData["Title"] = "Panel de Administración — Usuarios";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("usuarios")" />
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+            <div>
+                <h3 style="margin:0 0 4px;font-size:16px;">Directorio de Usuarios</h3>
+                <p style="margin:0;color:var(--dga-muted);font-size:13px;">Gestión de accesos, roles y credenciales</p>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <a asp-action="CargaMasiva" class="btn btn-outline">Carga Masiva</a>
+                <a asp-action="Crear" class="btn btn-primary">Crear Nuevo Usuario</a>
+            </div>
+        </div>
+        <form method="get">
+            <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar usuario..." style="max-width:320px;" />
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="data-table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Fecha Creación</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Usuarios.Count == 0)
+                    {
+                        <tr><td colspan="6" style="text-align:center;color:var(--dga-muted);padding:28px;">No se encontraron usuarios.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var u in Model.Usuarios)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600;">@u.Nombre</div>
+                                    <div style="color:var(--dga-muted);font-size:12.5px;">@u.Email</div>
+                                </td>
+                                <td>
+                                    @if (u.RolEditable)
+                                    {
+                                        <form asp-action="CambiarRol" asp-route-id="@u.Id" method="post" class="js-form-cambiar-rol" data-email="@u.Email">
+                                            <select name="nuevoRol" class="status-select">
+                                                <option value="Usuario" selected="@(u.Rol == "Usuario")">Usuario</option>
+                                                <option value="Administrador" selected="@(u.Rol == "Administrador")">Administrador</option>
+                                            </select>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span>@u.Rol</span>
+                                    }
+                                    @if (u.EsAdminPrincipal)
+                                    {
+                                        <div><span class="status-badge" style="margin-top:4px;font-size:10.5px;">Principal</span></div>
+                                    }
+                                    else if (!u.RolEditable)
+                                    {
+                                        <div style="color:var(--dga-muted);font-size:11px;margin-top:4px;">
+                                            @(u.EsFilaPropia ? "Tu propio usuario" : "Solo el admin principal puede cambiarlo")
+                                        </div>
+                                    }
+                                </td>
+                                <td>@(u.Departamento ?? "-")</td>
+                                <td><span class="status-badge @(u.Activo ? "is-success" : "is-danger")">@(u.Activo ? "Activo" : "Inactivo")</span></td>
+                                <td>@u.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                        <button type="button" class="btn btn-outline btn-sm"
+                                                data-abrir-modal-contrasena data-id="@u.Id" data-email="@u.Email">
+                                            Cambiar Contraseña
+                                        </button>
+                                        <form asp-action="CambiarActivo" asp-route-id="@u.Id" asp-route-activo="@(!u.Activo)" method="post"
+                                              data-confirm="¿@(u.Activo ? "Desactivar" : "Reactivar") a @u.Email?">
+                                            <button type="submit" class="btn btn-outline btn-sm" style="color:@(u.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
+                                                @(u.Activo ? "Desactivar" : "Reactivar")
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-cambiar-contrasena" hidden>
+    <div class="modal-box">
+        <form asp-action="CambiarContrasena" method="post">
+            <input type="hidden" name="id" id="cc-id" />
+            <div class="modal-box__header">
+                <h3>Cambiar Contraseña</h3>
+                <p>Vas a establecer una nueva contraseña para <strong id="cc-email">-</strong>.</p>
+            </div>
+            <div class="modal-box__body">
+                <div class="form-group">
+                    <label class="form-label">Nueva Contraseña</label>
+                    <input type="password" name="nuevaContrasena" id="cc-nueva" class="form-control" minlength="6" required autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirmar Contraseña</label>
+                    <input type="password" name="confirmarContrasena" id="cc-confirmar" class="form-control" minlength="6" required autocomplete="new-password" />
+                </div>
+            </div>
+            <div class="modal-box__footer">
+                <button type="button" class="btn btn-outline" id="cc-cerrar">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Contraseña</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var modal = document.getElementById('modal-cambiar-contrasena');
+            var inputId = document.getElementById('cc-id');
+            var email = document.getElementById('cc-email');
+            var nueva = document.getElementById('cc-nueva');
+            var confirmar = document.getElementById('cc-confirmar');
+
+            document.querySelectorAll('[data-abrir-modal-contrasena]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    inputId.value = btn.dataset.id;
+                    email.textContent = btn.dataset.email;
+                    nueva.value = '';
+                    confirmar.value = '';
+                    modal.hidden = false;
+                    nueva.focus();
+                });
+            });
+
+            document.getElementById('cc-cerrar').addEventListener('click', function () {
+                modal.hidden = true;
+            });
+
+            modal.querySelector('form').addEventListener('submit', function (e) {
+                if (nueva.value !== confirmar.value) {
+                    e.preventDefault();
+                    dgaToast('Las contraseñas no coinciden.', 'danger');
+                }
+            });
+
+            // El mensaje de confirmación depende de qué rol se elige, así que no
+            // se puede armar con un atributo data-confirm estático: se pide la
+            // confirmación acá mismo y recién después se envía el form.
+            document.querySelectorAll('.js-form-cambiar-rol').forEach(function (form) {
+                var select = form.querySelector('select');
+                var valorAnterior = select.value;
+                select.addEventListener('change', function () {
+                    var nuevoTexto = select.selectedOptions[0].text;
+                    dgaConfirm('¿Cambiar el rol de ' + form.dataset.email + ' a ' + nuevoTexto + '?').then(function (ok) {
+                        if (ok) {
+                            form.submit();
+                        } else {
+                            select.value = valorAnterior;
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
+}

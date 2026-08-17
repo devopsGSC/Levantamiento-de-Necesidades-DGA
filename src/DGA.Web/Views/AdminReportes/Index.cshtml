@@ -1,0 +1,68 @@
+@model AdminReportesIndexViewModel
+@{
+    ViewData["Title"] = "Panel de Administración — Reportes";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("reportes")" />
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;">
+            <div>
+                <h3 style="margin:0 0 4px;font-size:16px;">Reportes Semanales</h3>
+                <p style="margin:0;color:var(--dga-muted);font-size:13px;">
+                    Todos los domingos se genera automáticamente un reporte (lunes a domingo) con el listado de solicitudes de esa semana, en PDF y Excel.
+                </p>
+            </div>
+            <form asp-action="Generar" method="post">
+                <button type="submit" class="btn btn-primary">Generar Reporte Ahora</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="data-table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Semana</th><th>Solicitudes</th><th>Tipo</th><th>Generado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Reportes.Count == 0)
+                    {
+                        <tr><td colspan="5" style="text-align:center;color:var(--dga-muted);padding:28px;">Todavía no se generó ningún reporte semanal.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.Reportes)
+                        {
+                            <tr>
+                                <td style="font-weight:600;">@r.FechaInicio.ToString("dd/MM/yyyy") — @r.FechaFin.ToString("dd/MM/yyyy")</td>
+                                <td>@r.CantidadSolicitudes</td>
+                                <td>
+                                    <span class="status-badge @(r.GeneradoManualmente ? "is-warning" : "is-success")">
+                                        @(r.GeneradoManualmente ? "Manual" : "Automático")
+                                    </span>
+                                </td>
+                                <td>
+                                    @r.GeneradoEn.ToString("dd/MM/yyyy HH:mm")
+                                    @if (!string.IsNullOrWhiteSpace(r.GeneradoPor))
+                                    {
+                                        <div style="color:var(--dga-muted);font-size:12px;">por @r.GeneradoPor</div>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                        <a asp-action="DescargarPdf" asp-route-id="@r.Id" class="btn btn-outline btn-sm">PDF</a>
+                                        <a asp-action="DescargarExcel" asp-route-id="@r.Id" class="btn btn-outline btn-sm">Excel</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

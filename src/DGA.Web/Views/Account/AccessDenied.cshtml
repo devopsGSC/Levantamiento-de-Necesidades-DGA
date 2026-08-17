@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Acceso Denegado";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card__header">
+    <h1 class="auth-card__title">Acceso Denegado</h1>
+    <p class="auth-card__subtitle">Tu cuenta no tiene permisos para ver esta página.</p>
+</div>
+<div class="auth-card__footer">
+    <a asp-controller="Home" asp-action="Index">Volver al inicio</a>
+</div>

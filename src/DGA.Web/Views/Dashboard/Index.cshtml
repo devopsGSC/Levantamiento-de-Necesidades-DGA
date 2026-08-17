@@ -1,0 +1,285 @@
+@using System.Text.Json
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var chartData = JsonSerializer.Serialize(new
+    {
+        tendenciaLabels = Model.TendenciaLabels,
+        tendenciaValores = Model.TendenciaValores,
+        estadoLabels = Model.PorEstado.Select(b => b.Etiqueta),
+        estadoValores = Model.PorEstado.Select(b => b.Cantidad),
+        aduanaLabels = Model.PorAduanaLabels,
+        aduanaValores = Model.PorAduanaValores,
+        componenteLabels = Model.PorComponenteLabels,
+        componenteValores = Model.PorComponenteValores,
+    });
+}
+
+<div class="container-page" style="padding-bottom:40px;">
+    <div class="dashboard-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Resumen general de solicitudes, estados, prioridades y rendimiento</p>
+        </div>
+        @if (Model.UltimaSolicitudFecha.HasValue)
+        {
+            <span class="dashboard-meta">Última solicitud: @Model.UltimaSolicitudFecha.Value.ToString("dd/MM/yyyy HH:mm")</span>
+        }
+    </div>
+
+    <form method="get" class="filters-bar">
+        <div class="field">
+            <label>Aduana</label>
+            <select name="aduanaId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todas las aduanas</option>
+                @foreach (var opcion in Model.AduanaOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroAduanaId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Componente</label>
+            <select name="componenteId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todos los componentes</option>
+                @foreach (var opcion in Model.ComponenteOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroComponenteId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+    </form>
+
+    <div class="kpi-grid">
+        <div class="card kpi-card">
+            <div class="kpi-card__value">@Model.Total</div>
+            <div class="kpi-card__label">Total Solicitudes</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.Finalizadas)%</span></div>
+            <div class="kpi-card__value">@Model.Finalizadas</div>
+            <div class="kpi-card__label">Finalizadas</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.EnProceso)%</span></div>
+            <div class="kpi-card__value">@Model.EnProceso</div>
+            <div class="kpi-card__label">En Proceso</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.Pendientes)%</span></div>
+            <div class="kpi-card__value">@Model.Pendientes</div>
+            <div class="kpi-card__label">Pendientes</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct" style="color:var(--dga-danger);">@Model.Pct(Model.RechazadasODenegadas)%</span></div>
+            <div class="kpi-card__value">@Model.RechazadasODenegadas</div>
+            <div class="kpi-card__label">Rechazadas / Denegadas</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.PrioridadAlta)%</span></div>
+            <div class="kpi-card__value">@Model.PrioridadAlta</div>
+            <div class="kpi-card__label">Prioridad Alta</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.Borradores)%</span></div>
+            <div class="kpi-card__value">@Model.Borradores</div>
+            <div class="kpi-card__label">Borradores</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__value">@Model.ProgresoPromedio%</div>
+            <div class="kpi-card__label">Progreso Promedio</div>
+        </div>
+    </div>
+
+    <div class="dash-row">
+        <div class="card chart-card">
+            <h3>Tendencia de Solicitudes (últimos 14 días)</h3>
+            <canvas id="chartTendencia"></canvas>
+        </div>
+        <div class="card chart-card">
+            <h3>Por Prioridad</h3>
+            <div class="breakdown-list">
+                @foreach (var b in Model.PorPrioridad)
+                {
+                    <div class="breakdown-item"><span>@b.Etiqueta</span><strong>@b.Cantidad · @b.Porcentaje%</strong></div>
+                }
+                @if (Model.PorPrioridad.Count == 0)
+                {
+                    <p style="color:var(--dga-muted);font-size:13px;margin:0;">Sin datos todavía.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Analíticas de Progreso</h2>
+    <div class="dash-row even" style="margin-bottom:24px;">
+        <div class="card progress-hero">
+            <div class="progress-hero__label">Progreso Promedio Global</div>
+            <div class="progress-hero__value">@Model.ProgresoPromedio%</div>
+            <div class="progress-track" style="width:100%;margin-top:12px;"><span style="width:@(Model.ProgresoPromedio)%;"></span></div>
+        </div>
+        <div class="card" style="padding:20px 22px;">
+            <h3 style="margin:0 0 14px;font-size:15px;">Distribución por rangos de avance</h3>
+            <div class="range-grid">
+                @foreach (var b in Model.DistribucionProgreso)
+                {
+                    <div class="range-card">
+                        <div class="range-card__label">@b.Etiqueta</div>
+                        <div class="range-card__value">@b.Cantidad</div>
+                        <div class="range-card__pct">@b.Porcentaje% del total</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-row">
+        <div class="card" style="padding:20px 22px;">
+            <h3 style="margin:0 0 16px;font-size:15px;">Desglose por Estado</h3>
+            <div class="breakdown-list" style="margin-bottom:24px;">
+                @foreach (var b in Model.PorEstado)
+                {
+                    <div class="breakdown-item"><span>@b.Etiqueta · @b.Cantidad solicitudes</span><strong>@b.Porcentaje%</strong></div>
+                }
+                @if (Model.PorEstado.Count == 0)
+                {
+                    <p style="color:var(--dga-muted);font-size:13px;margin:0;">Sin datos todavía.</p>
+                }
+            </div>
+            <h3 style="margin:0 0 14px;font-size:15px;">Top Aduanas por Rendimiento</h3>
+            @foreach (var a in Model.TopAduanas)
+            {
+                <div class="rank-item">
+                    <div class="rank-item__top"><span>@a.Aduana</span><span>@a.PorcentajeFinalizadas%</span></div>
+                    <div class="progress-track"><span style="width:@(a.PorcentajeFinalizadas)%;"></span></div>
+                    <div class="rank-item__sub">@a.Finalizadas de @a.Total finalizadas</div>
+                </div>
+            }
+            @if (Model.TopAduanas.Count == 0)
+            {
+                <p style="color:var(--dga-muted);font-size:13px;margin:0;">Sin datos todavía.</p>
+            }
+        </div>
+        <div class="card chart-card">
+            <h3>Distribución de Solicitudes por Estado</h3>
+            <canvas id="chartEstado"></canvas>
+        </div>
+    </div>
+
+    <h2 class="section-title">Solicitudes por Aduana y Componente</h2>
+    <div class="dash-row even" style="margin-bottom:24px;">
+        <div class="card chart-card">
+            <h3>Por Aduana</h3>
+            <canvas id="chartAduana"></canvas>
+        </div>
+        <div class="card chart-card">
+            <h3>Por Componente</h3>
+            <canvas id="chartComponente"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px 0;">
+            <h3 style="margin:0;font-size:15px;">Solicitudes Recientes</h3>
+            <a asp-controller="AdminSolicitudes" asp-action="Index" class="btn btn-outline btn-sm">Ver todas</a>
+        </div>
+        <div class="data-table-wrap" style="padding:14px 22px 18px;">
+            <table class="data-table">
+                <thead>
+                    <tr><th>ID</th><th>Componente</th><th>Aduana</th><th>Prioridad</th><th>Estado</th><th>Progreso</th><th>Fecha</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model.SolicitudesRecientes.Count == 0)
+                    {
+                        <tr><td colspan="7" style="text-align:center;color:var(--dga-muted);padding:24px;">No hay solicitudes registradas todavía.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var s in Model.SolicitudesRecientes)
+                        {
+                            <tr>
+                                <td style="font-weight:600;">@s.IdSolicitud</td>
+                                <td>@s.Componente</td>
+                                <td>@s.Aduana</td>
+                                <td>@s.Prioridad</td>
+                                <td><span class="status-badge">@s.Estado</span></td>
+                                <td>
+                                    <div class="progress-track" style="width:80px;"><span style="width:@(s.Progreso)%;"></span></div>
+                                    <span style="font-size:11.5px;color:var(--dga-muted);">@s.Progreso%</span>
+                                </td>
+                                <td>@s.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        const dashboardData = @Html.Raw(chartData);
+        const dgaColors = ['#2563EB', '#0EA5E9', '#0F9B8E', '#7c3aed', '#CA8A04', '#dc2626', '#64748b'];
+        Chart.defaults.font.family = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        Chart.defaults.font.size = 12;
+
+        new Chart(document.getElementById('chartTendencia'), {
+            type: 'line',
+            data: {
+                labels: dashboardData.tendenciaLabels,
+                datasets: [{
+                    data: dashboardData.tendenciaValores,
+                    borderColor: dgaColors[0],
+                    backgroundColor: 'rgba(37,99,235,.12)',
+                    fill: true,
+                    tension: .3,
+                    pointRadius: 2,
+                }],
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+
+        new Chart(document.getElementById('chartEstado'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.estadoLabels,
+                datasets: [{ data: dashboardData.estadoValores, backgroundColor: dgaColors[0] }],
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+
+        new Chart(document.getElementById('chartAduana'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.aduanaLabels,
+                datasets: [{ data: dashboardData.aduanaValores, backgroundColor: dgaColors[1] }],
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+
+        new Chart(document.getElementById('chartComponente'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.componenteLabels,
+                datasets: [{ data: dashboardData.componenteValores, backgroundColor: dgaColors[2] }],
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+    </script>
+}

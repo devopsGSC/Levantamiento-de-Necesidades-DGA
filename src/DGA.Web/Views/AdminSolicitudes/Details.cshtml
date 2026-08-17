@@ -1,0 +1,150 @@
+@model AdminSolicitudDetailViewModel
+@{
+    ViewData["Title"] = $"Solicitud {Model.IdSolicitud} — Admin";
+}
+
+<div class="container-page" style="padding-bottom:40px;">
+    <partial name="_AdminTabs" model="@("solicitudes")" />
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+            <h1 class="section-title" style="margin:0 0 6px;">Detalle de Solicitud #@Model.IdSolicitud</h1>
+            <span class="status-badge">@Model.Estado</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <a asp-action="DescargarPdf" asp-route-id="@Model.Id" class="btn btn-outline">PDF</a>
+            <a asp-action="DescargarExcel" asp-route-id="@Model.Id" class="btn btn-outline">Excel</a>
+            <a asp-action="Index" class="btn btn-outline">Volver al listado</a>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card" style="padding:20px 22px;">
+            <h3 style="margin:0 0 14px;font-size:15px;">Información General</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13.5px;">
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Responsable</div><div>@Model.NombreResponsable</div><div style="color:var(--dga-muted);">@Model.Cargo</div></div>
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Aduana</div><div>@Model.Aduana</div><div style="color:var(--dga-muted);">@Model.TipoAduana</div></div>
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Fecha de Registro</div><div>@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</div></div>
+                @if (Model.FechaRevision.HasValue)
+                {
+                    <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Última Revisión</div><div>@Model.FechaRevision.Value.ToString("dd/MM/yyyy HH:mm")</div></div>
+                }
+            </div>
+        </div>
+        <div class="card" style="padding:20px 22px;">
+            <h3 style="margin:0 0 14px;font-size:15px;">Justificación</h3>
+            <p style="font-size:13.5px;white-space:pre-wrap;margin:0 0 12px;">@Model.JustificacionGeneral</p>
+            @if (!string.IsNullOrWhiteSpace(Model.ObservacionesGenerales))
+            {
+                <div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Observaciones</div>
+                <p style="font-size:13.5px;white-space:pre-wrap;margin:4px 0 0;">@Model.ObservacionesGenerales</p>
+            }
+        </div>
+    </div>
+
+    <div class="card" style="padding:20px 22px;margin-bottom:20px;">
+        <h3 style="margin:0 0 16px;font-size:15px;">Ítems Solicitados (@Model.Items.Count)</h3>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+            @foreach (var item in Model.Items)
+            {
+                <div class="card" style="padding:16px 18px;background:var(--dga-bg);">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                        <strong>Ítem #@item.NumeroItem</strong>
+                        <span class="status-badge">@item.Prioridad</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:13.5px;">
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Componente</div>@item.Componente</div>
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Subcomponente</div>@item.Subcomponente</div>
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Elemento / Necesidad</div>@(item.Elemento ?? "-")</div>
+                        @if (!string.IsNullOrWhiteSpace(item.Detalle))
+                        {
+                            <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Detalle</div>@item.Detalle</div>
+                        }
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Cantidad</div>@item.CantidadSolicitada</div>
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Ubicación Específica</div>@(item.UbicacionEspecifica ?? "-")</div>
+                    </div>
+                    @if (item.Fotografias.Count == 0)
+                    {
+                        <p style="color:var(--dga-muted);font-size:12.5px;margin:10px 0 0;">Sin fotografías adjuntas</p>
+                    }
+                    else
+                    {
+                        <div class="photo-thumb-grid">
+                            @foreach (var foto in item.Fotografias)
+                            {
+                                <button type="button" class="photo-thumb" data-foto-id="@foto.Id" data-foto-nombre="@foto.NombreOriginal">
+                                    <img src="@Url.Action("Foto", "Solicitudes", new { solicitudItemFotografiaId = foto.Id })" alt="@foto.NombreOriginal" loading="lazy" />
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card" style="padding:20px 22px;">
+            <h3 style="margin:0 0 16px;font-size:15px;">Gestión de Estado</h3>
+            <form asp-action="CambiarEstado" method="post">
+                <input type="hidden" name="SolicitudId" value="@Model.Id" />
+                <div class="form-group">
+                    <label class="form-label">Cambiar Estado</label>
+                    <select name="NuevoEstadoId" class="form-control">
+                        @foreach (var opcion in Model.EstadoOptions)
+                        {
+                            <option value="@opcion.Id" selected="@(opcion.Id == Model.EstadoActualId)">@opcion.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Progreso (%)</label>
+                    <input type="number" name="Progreso" min="0" max="100" value="@Model.Progreso" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Comentario Administrativo</label>
+                    <textarea name="Comentario" class="form-control" placeholder="Opcional — visible en la bitácora"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Guardar Cambios</button>
+            </form>
+            <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post" style="margin-top:10px;"
+                  data-confirm="¿Eliminar esta solicitud? Esta acción no se puede deshacer." data-confirm-peligroso="true">
+                <button type="submit" class="btn btn-outline btn-block" style="color:var(--dga-danger);">Eliminar Solicitud</button>
+            </form>
+        </div>
+
+        <div class="card" style="padding:20px 22px;">
+            <h3 style="margin:0 0 16px;font-size:15px;">Bitácora de Cambios</h3>
+            @if (Model.Historial.Count == 0)
+            {
+                <p style="color:var(--dga-muted);font-size:13px;">Sin movimientos registrados.</p>
+            }
+            else
+            {
+                <div style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;">
+                    @foreach (var h in Model.Historial)
+                    {
+                        <div style="font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
+                            <div style="color:var(--dga-muted);margin-bottom:4px;">@h.FechaCambio.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div><span class="status-badge">@(h.EstadoAnterior ?? "—")</span> → <span class="status-badge">@h.EstadoNuevo</span></div>
+                            @if (!string.IsNullOrWhiteSpace(h.Comentario))
+                            {
+                                <div style="color:var(--dga-muted);margin-top:4px;">@h.Comentario</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.photo-thumb').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                dgaLightbox('/Solicitudes/Foto?solicitudItemFotografiaId=' + btn.dataset.fotoId, btn.dataset.fotoNombre);
+            });
+        });
+    </script>
+}

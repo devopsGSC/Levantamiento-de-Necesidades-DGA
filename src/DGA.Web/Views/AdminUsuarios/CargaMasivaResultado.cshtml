@@ -1,0 +1,66 @@
+@model CargaMasivaResultadoViewModel
+@{
+    ViewData["Title"] = "Resultado de la Carga Masiva";
+}
+
+<div class="container-page">
+    <partial name="_AdminTabs" model="@("usuarios")" />
+
+    <div class="card" style="padding:20px 22px;margin-bottom:16px;">
+        <h3 style="margin:0 0 4px;font-size:16px;">Resultado de la Carga Masiva</h3>
+        <p style="margin:0;color:var(--dga-muted);font-size:13px;">
+            <span class="status-badge is-success">@Model.Creados.Count creados</span>
+            @if (Model.Errores.Count > 0)
+            {
+                <span class="status-badge is-danger" style="margin-left:8px;">@Model.Errores.Count con error</span>
+            }
+        </p>
+    </div>
+
+    @if (Model.Errores.Count > 0)
+    {
+        <div class="card" style="margin-bottom:16px;">
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Fila</th><th>Correo</th><th>Motivo</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var error in Model.Errores)
+                        {
+                            <tr>
+                                <td>@error.Fila</td>
+                                <td>@(string.IsNullOrWhiteSpace(error.Email) ? "-" : error.Email)</td>
+                                <td>@error.Motivo</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (Model.Creados.Count > 0)
+    {
+        <div class="card">
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Usuarios Creados</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var email in Model.Creados)
+                        {
+                            <tr><td>@email</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+        <a asp-action="CargaMasiva" class="btn btn-outline">Subir Otro Archivo</a>
+        <a asp-action="Index" class="btn btn-primary">Volver al Directorio</a>
+    </div>
+</div>

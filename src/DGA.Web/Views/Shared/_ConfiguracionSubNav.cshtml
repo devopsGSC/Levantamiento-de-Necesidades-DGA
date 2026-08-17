@@ -1,0 +1,6 @@
+@model string
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <a href="/Admin/Configuracion" class="btn @(Model == "general" ? "btn-primary" : "btn-outline") btn-sm">Datos Generales</a>
+    <a href="/Admin/Configuracion/Aduanas" class="btn @(Model == "aduanas" ? "btn-primary" : "btn-outline") btn-sm">Aduanas</a>
+    <a href="/Admin/Configuracion/Componentes" class="btn @(Model == "componentes" ? "btn-primary" : "btn-outline") btn-sm">Componentes / Ítems</a>
+</div>

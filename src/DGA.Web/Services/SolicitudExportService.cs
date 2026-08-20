@@ -173,21 +173,23 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
 
                     col.Item().PaddingTop(20).Row(fila =>
                     {
-                        void Firma(string etiqueta, string nombre)
+                        void Firma(string? etiqueta = null, string? nombre = null)
                         {
                             fila.RelativeItem().Column(c =>
                             {
                                 c.Item().PaddingBottom(4).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
-                                c.Item().AlignCenter().Text(etiqueta).SemiBold().FontSize(9);
-                                c.Item().AlignCenter().Text(nombre).FontSize(8.5f).FontColor(Colors.Grey.Darken1);
+                                if (etiqueta is not null)
+                                    c.Item().AlignCenter().Text(etiqueta).SemiBold().FontSize(9);
+                                if (nombre is not null)
+                                    c.Item().AlignCenter().Text(nombre).FontSize(8.5f).FontColor(Colors.Grey.Darken1);
                             });
                         }
 
                         Firma("Firma del Solicitante", s.NombreResponsable);
                         fila.ConstantItem(16);
-                        Firma("Visto Bueno", "Jefatura / Dirección");
+                        Firma();
                         fila.ConstantItem(16);
-                        Firma("Autorización", "Administración");
+                        Firma();
                     });
 
                     col.Item().PaddingTop(14).AlignCenter().Text(t =>

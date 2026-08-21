@@ -50,8 +50,8 @@
                                 <td><partial name="_EstadoBadge" model="@s.Estado" /></td>
                                 <td>
                                     <div class="row-actions">
-                                        <a asp-action="Details" asp-route-id="@s.Id" class="btn-action is-primary" title="Ver Detalles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg> Detalles</a>
-                                        <a asp-action="DescargarPdf" asp-route-id="@s.Id" class="btn-action is-pdf" title="Descargar PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /></svg> PDF</a>
+                                        <a asp-action="Details" asp-route-id="@s.Id" class="btn-action is-primary" title="Ver Detalles" aria-label="Ver Detalles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg><span class="btn-action__tip">Detalles</span></a>
+                                        <a asp-action="DescargarPdf" asp-route-id="@s.Id" class="btn-action is-pdf" title="Descargar PDF" aria-label="Descargar PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /></svg><span class="btn-action__tip">PDF</span></a>
                                     </div>
                                 </td>
                             </tr>

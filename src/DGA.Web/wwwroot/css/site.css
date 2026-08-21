@@ -266,21 +266,40 @@ a.btn { text-decoration: none; }
 
 /* ---------- Acciones de fila (listados de solicitudes) ---------- */
 /* Antes eran todos ".btn-outline btn-sm" iguales — un color e icono por tipo de
-   acción para poder distinguirlas de un vistazo (Ver/PDF/Excel/Editar/Descartar). */
+   acción para poder distinguirlas de un vistazo (Ver/PDF/Excel/Editar/Descartar).
+   Solo ícono; el texto de cada acción aparece al pasar el cursor (title/aria-label
+   nativos + ".btn-action__tip" para un tooltip visual, ya que el "title" del
+   navegador tarda en aparecer y no se puede animar). */
 .row-actions { display: flex; gap: 6px; flex-wrap: nowrap; }
 .btn-action {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  height: 32px; padding: 0 10px;
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; padding: 0;
   border-radius: var(--dga-radius-sm);
   border: 1px solid var(--dga-border);
   background: var(--dga-surface);
   color: var(--dga-muted);
-  font-size: 12.5px; font-weight: 600; font-family: inherit;
+  font-family: inherit;
   cursor: pointer; text-decoration: none;
   transition: background-color .12s ease, border-color .12s ease, color .12s ease;
 }
-.btn-action svg { width: 15px; height: 15px; flex-shrink: 0; }
+.btn-action svg { width: 16px; height: 16px; flex-shrink: 0; }
 .btn-action:hover { background: var(--dga-muted-bg); color: var(--dga-ink); border-color: var(--dga-ink); text-decoration: none; }
+.btn-action__tip {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(2px);
+  background: var(--dga-ink); color: #fff;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  padding: 4px 8px; border-radius: 6px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .12s ease, transform .12s ease;
+  z-index: 5;
+}
+.btn-action:hover .btn-action__tip, .btn-action:focus-visible .btn-action__tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Botones de encabezado (Detalle de Solicitud) con el mismo tratamiento de solo
+   ícono, pero del tamaño normal de ".btn". */
+.btn-icon { position: relative; width: 36px; padding: 0; gap: 0; }
+.btn-icon svg { width: 17px; height: 17px; }
+.btn-icon:hover .btn-action__tip, .btn-icon:focus-visible .btn-action__tip { opacity: 1; transform: translateX(-50%) translateY(0); }
 /* Estos mismos matices también se usan sobre ".btn-outline" de tamaño normal
    (encabezado del Detalle de Solicitud), no solo sobre ".btn-action". */
 .btn-action.is-primary, .btn-outline.is-primary { color: var(--dga-primary); border-color: rgba(37,99,235,.3); }

@@ -76,10 +76,10 @@ public class SolicitudesController(
 
     public async Task<IActionResult> Create()
     {
-        var model = new SolicitudFormViewModel
-        {
-            IdSolicitud = await idGenerator.NuevoIdAsync(),
-        };
+        // El correlativo SOL-##### se asigna en Guardar(), no acá — NEXT VALUE FOR
+        // consume la secuencia siempre que se llama, así que generarlo con solo abrir
+        // el formulario deja huecos por cada visita que nunca termina en un guardado.
+        var model = new SolicitudFormViewModel();
         await CargarOpcionesAsync(model);
         return View("Form", model);
     }
@@ -195,7 +195,7 @@ public class SolicitudesController(
         {
             solicitud = new Solicitud
             {
-                IdSolicitud = model.IdSolicitud ?? await idGenerator.NuevoIdAsync(),
+                IdSolicitud = string.IsNullOrEmpty(model.IdSolicitud) ? await idGenerator.NuevoIdAsync() : model.IdSolicitud,
                 UsuarioId = UsuarioIdActual,
                 EstadoId = Estados.GuardadoBorrador,
                 FechaRegistro = DateTime.UtcNow,

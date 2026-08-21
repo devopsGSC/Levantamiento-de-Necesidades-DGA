@@ -34,7 +34,7 @@
             <div class="form-grid" id="campos-general">
                 <div>
                     <label class="form-label">ID Solicitud *</label>
-                    <input type="text" class="form-control" value="@Model.IdSolicitud" readonly style="background:var(--dga-bg);font-family:ui-monospace,monospace;" />
+                    <input type="text" class="form-control" value="@(string.IsNullOrEmpty(Model.IdSolicitud) ? "Se asigna al guardar" : Model.IdSolicitud)" readonly style="background:var(--dga-bg);font-family:ui-monospace,monospace;" />
                 </div>
                 <div>
                     <label asp-for="NombreResponsable" class="form-label">Nombre Solicitante *</label>

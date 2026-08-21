@@ -8,6 +8,8 @@
         tipoAduanaId = Model.TipoAduanaId,
         aduanaId = Model.AduanaId,
         itemsExistentes = JsonSerializer.Deserialize<object>(Model.ItemsExistentesJson),
+        elementoIdsSuscripcion = Model.ElementoIdsSuscripcion,
+        detalleIdsSuscripcion = Model.DetalleIdsSuscripcion,
     });
 }
 
@@ -119,15 +121,54 @@
                     <label class="form-label">Elemento / Necesidad *</label>
                     <input type="text" id="ElementoLibre" class="form-control" placeholder="Detalle exactamente lo que necesita" />
                 </div>
+                <div id="agregar-elemento" class="span-2" hidden>
+                    <button type="button" class="btn-link" id="btn-mostrar-agregar-elemento">+ No encuentro el elemento que necesito, agregar uno nuevo</button>
+                    <div class="catalogo-agregar__form" id="form-agregar-elemento" hidden>
+                        <input type="text" id="nuevo-elemento-nombre" class="form-control" placeholder="Nombre del nuevo elemento" />
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-guardar-elemento">Agregar</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-cancelar-elemento">Cancelar</button>
+                    </div>
+                </div>
                 <div id="wrap-detalle" hidden>
                     <label class="form-label">Detalle Específico *</label>
                     <select id="DetalleId" class="form-control">
                         <option value="">Seleccione el detalle exacto requerido</option>
                     </select>
+                    <div id="agregar-detalle">
+                        <button type="button" class="btn-link" id="btn-mostrar-agregar-detalle">+ No encuentro el detalle que necesito, agregar uno nuevo</button>
+                        <div class="catalogo-agregar__form" id="form-agregar-detalle" hidden>
+                            <input type="text" id="nuevo-detalle-nombre" class="form-control" placeholder="Nombre del nuevo detalle" />
+                            <button type="button" class="btn btn-outline btn-sm" id="btn-guardar-detalle">Agregar</button>
+                            <button type="button" class="btn btn-outline btn-sm" id="btn-cancelar-detalle">Cancelar</button>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="form-label">Cantidad Requerida</label>
                     <input type="number" id="CantidadSolicitada" class="form-control" value="1" min="1" />
+                </div>
+                <div>
+                    <label class="form-label" id="label-costo-estimado">Costo Estimado (unitario)</label>
+                    <input type="number" id="CostoEstimado" class="form-control" value="0" min="0" step="0.01" placeholder="0.00" />
+                    <small class="muted" style="color:var(--dga-muted);">Dejalo en 0 si no lo conocés.</small>
+                </div>
+                <div id="wrap-suscripcion" class="span-2" hidden>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px 20px;">
+                        <div>
+                            <label class="form-label">Tipo de Suscripción</label>
+                            <select id="TipoSuscripcion" class="form-control">
+                                <option value="Mensual">Mensual</option>
+                                <option value="Anual">Anual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" id="label-cantidad-periodos">Cantidad de Meses</label>
+                            <input type="number" id="CantidadPeriodos" class="form-control" value="1" min="1" step="1" />
+                        </div>
+                    </div>
+                    <small class="muted" style="color:var(--dga-muted);">
+                        Este ítem es una suscripción: el presupuesto se calcula como Costo del período × Cantidad Requerida × Cantidad de meses/años.
+                    </small>
                 </div>
                 <div>
                     <label class="form-label">Prioridad</label>
@@ -165,17 +206,18 @@
         <div class="card form-section" style="padding:22px 24px;">
             <div class="form-section__header">
                 <h2>3. Ítems Agregados (<span id="contador-items">0</span>)</h2>
+                <span class="status-badge">Monto Presupuestado: <strong id="monto-presupuestado-total">$0.00</strong></span>
             </div>
             <div class="item-table-wrap">
                 <table class="item-table" id="tabla-items">
                     <thead>
                         <tr>
                             <th>Nº</th><th>Prioridad</th><th>Componente &amp; Subcomponente</th><th>Elemento</th>
-                            <th>Ubicación</th><th>Cant.</th><th>Fotos</th><th>Acciones</th>
+                            <th>Ubicación</th><th>Cant.</th><th>Costo Est.</th><th>Subtotal</th><th>Fotos</th><th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-items-body">
-                        <tr id="fila-vacia"><td colspan="8" class="muted" style="text-align:center;padding:20px;">No hay ítems agregados</td></tr>
+                        <tr id="fila-vacia"><td colspan="10" class="muted" style="text-align:center;padding:20px;">No hay ítems agregados</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -202,6 +244,7 @@
             <div class="summary-row"><span>Responsable</span><strong id="resumen-responsable">-</strong></div>
             <div class="summary-row"><span>Aduana</span><strong id="resumen-aduana">-</strong></div>
             <div class="summary-row"><span>Ítems</span><strong id="resumen-items">0</strong></div>
+            <div class="summary-row"><span>Monto Presupuestado</span><strong id="resumen-presupuesto">$0.00</strong></div>
             <label class="confirm-checkbox">
                 <input type="checkbox" id="check-confirmo" />
                 <span>Confirmo que revisé la información y deseo enviar esta solicitud.</span>

@@ -9,7 +9,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
         <div>
             <h1 class="section-title" style="margin:0 0 6px;">Detalle de Solicitud #@Model.IdSolicitud</h1>
-            <span class="status-badge">@Model.Estado</span>
+            <partial name="_EstadoBadge" model="@Model.Estado" />
         </div>
         <div style="display:flex;gap:10px;">
             <a asp-action="DescargarPdf" asp-route-id="@Model.Id" class="btn btn-outline">PDF</a>
@@ -43,7 +43,10 @@
     </div>
 
     <div class="card" style="padding:20px 22px;margin-bottom:20px;">
-        <h3 style="margin:0 0 16px;font-size:15px;">Ítems Solicitados (@Model.Items.Count)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+            <h3 style="margin:0;font-size:15px;">Ítems Solicitados (@Model.Items.Count)</h3>
+            <span class="status-badge">Monto Presupuestado Total: <strong>@Model.MontoPresupuestadoTotal.ToString("$#,##0.00")</strong></span>
+        </div>
         <div style="display:flex;flex-direction:column;gap:14px;">
             @foreach (var item in Model.Items)
             {
@@ -61,6 +64,12 @@
                             <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Detalle</div>@item.Detalle</div>
                         }
                         <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Cantidad</div>@item.CantidadSolicitada</div>
+                        @if (!string.IsNullOrWhiteSpace(item.TipoSuscripcion))
+                        {
+                            <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Suscripción</div>@item.TipoSuscripcion × @item.CantidadPeriodos @(item.TipoSuscripcion == "Anual" ? "año(s)" : "mes(es)")</div>
+                        }
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Costo Estimado (@(string.IsNullOrWhiteSpace(item.TipoSuscripcion) ? "unitario" : "por período"))</div>@item.CostoEstimado.ToString("$#,##0.00")</div>
+                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Subtotal</div>@item.Subtotal.ToString("$#,##0.00")</div>
                         <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Ubicación Específica</div>@(item.UbicacionEspecifica ?? "-")</div>
                     </div>
                     @if (item.Fotografias.Count == 0)
@@ -126,7 +135,7 @@
                     {
                         <div style="font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
                             <div style="color:var(--dga-muted);margin-bottom:4px;">@h.FechaCambio.ToString("dd/MM/yyyy HH:mm")</div>
-                            <div><span class="status-badge">@(h.EstadoAnterior ?? "—")</span> → <span class="status-badge">@h.EstadoNuevo</span></div>
+                            <div><partial name="_EstadoBadge" model="@(h.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@h.EstadoNuevo" /></div>
                             @if (!string.IsNullOrWhiteSpace(h.Comentario))
                             {
                                 <div style="color:var(--dga-muted);margin-top:4px;">@h.Comentario</div>

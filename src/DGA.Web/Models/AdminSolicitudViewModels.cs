@@ -40,6 +40,9 @@ public class AdminSolicitudDetailViewModel
     public List<SolicitudDetailItemViewModel> Items { get; set; } = new();
     public List<SolicitudHistorialItemViewModel> Historial { get; set; } = new();
     public List<OpcionCatalogo> EstadoOptions { get; set; } = new();
+
+    /// <summary>Suma de los subtotales de todos los ítems — $0 en los ítems sin costo estimado.</summary>
+    public decimal MontoPresupuestadoTotal => Items.Sum(i => i.Subtotal);
 }
 
 public class CambiarEstadoViewModel

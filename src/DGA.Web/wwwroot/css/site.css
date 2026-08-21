@@ -113,12 +113,10 @@ a:hover { color: var(--dga-accent-dark); text-decoration: underline; }
 .dga-brand { display: flex; align-items: center; gap: 12px; }
 .dga-brand__icon-box {
   display: flex; align-items: center; justify-content: center;
-  height: 40px; padding: 0 14px;
-  background: var(--dga-primary);
-  border-radius: 12px;
+  height: 40px;
   flex-shrink: 0;
 }
-.dga-brand__logo { height: 22px; width: auto; display: block; }
+.dga-brand__logo { height: 26px; width: auto; display: block; }
 .dga-brand__text { line-height: 1.2; }
 .dga-brand__title { font-weight: 700; font-size: 15.5px; color: var(--dga-ink); }
 .dga-brand__subtitle { font-size: 12px; color: var(--dga-muted); }
@@ -334,6 +332,21 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
 .status-badge.is-warning { background: var(--dga-warning-soft); color: var(--dga-warning); }
 .status-badge.is-danger { background: var(--dga-danger-soft); color: var(--dga-danger); }
 
+/* Un color propio por Estado de Solicitud (12 estados, ver EstadosSolicitud) para
+   distinguirlos de un vistazo en listas y bitácoras — se aplican vía _EstadoBadge.cshtml. */
+.status-badge.is-estado-borrador   { background: #F1F5F9; color: #475569; }
+.status-badge.is-estado-solicitado { background: #DBEAFE; color: #1D4ED8; }
+.status-badge.is-estado-pendiente  { background: #FEF3E2; color: #D97706; }
+.status-badge.is-estado-aprobado   { background: #E8F8EE; color: #16A34A; }
+.status-badge.is-estado-denegado   { background: #FDECEC; color: #DC2626; }
+.status-badge.is-estado-comprado   { background: #E6FFFA; color: #0D9488; }
+.status-badge.is-estado-realizado  { background: #DCFCE7; color: #15803D; }
+.status-badge.is-estado-enproceso  { background: #EEF2FF; color: #4F46E5; }
+.status-badge.is-estado-rechazado  { background: #FFE4E6; color: #BE123C; }
+.status-badge.is-estado-observado  { background: #FFEDD5; color: #C2410C; }
+.status-badge.is-estado-cotizado   { background: #E0F2FE; color: #0284C7; }
+.status-badge.is-estado-finalizado { background: #EDE9FE; color: #6D28D9; }
+
 /* ---------- Footer ---------- */
 
 .dga-footer { background: var(--dga-footer-bg); color: var(--dga-footer-ink); margin-top: 48px; }
@@ -387,11 +400,9 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
 .auth-card__header { padding: 32px 32px 20px; text-align: center; background: rgba(241,245,249,.4); }
 .auth-card__icon {
   width: fit-content; height: 64px; margin: 0 auto 16px;
-  padding: 0 20px;
-  background: var(--dga-accent); color: #fff;
-  border-radius: var(--dga-radius); display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
-.auth-card__logo { height: 34px; width: auto; display: block; }
+.auth-card__logo { height: 40px; width: auto; display: block; }
 .auth-card__title { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
 .auth-card__subtitle { font-size: 13.5px; color: var(--dga-muted); margin: 0; }
 .auth-card__body { padding: 24px 32px 32px; border-top: 1px solid var(--dga-border); }
@@ -593,6 +604,15 @@ textarea.form-control { min-height: 88px; resize: vertical; font-family: inherit
 .elemento-checklist__item input { margin: 0; flex-shrink: 0; }
 .elemento-checklist__item[hidden] { display: none; }
 .elemento-checklist__vacio { padding: 12px; text-align: center; font-size: 13px; color: var(--dga-muted); }
+
+.btn-link {
+  background: none; border: none; padding: 0; margin-top: 6px;
+  color: var(--dga-primary); font-size: 13px; cursor: pointer; text-decoration: underline;
+}
+.btn-link:hover { color: var(--dga-primary-dark); }
+.catalogo-agregar__form { display: flex; gap: 8px; margin-top: 8px; }
+.catalogo-agregar__form[hidden] { display: none; }
+.catalogo-agregar__form .form-control { flex: 1; }
 
 .dropzone {
   border: 2px dashed var(--dga-border); border-radius: var(--dga-radius-sm);

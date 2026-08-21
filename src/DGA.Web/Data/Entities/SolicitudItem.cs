@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace DGA.Web.Data.Entities;
 
 public class SolicitudItem
@@ -19,6 +21,21 @@ public class SolicitudItem
     public int? DetalleId { get; set; }
 
     public int CantidadSolicitada { get; set; }
+
+    /// <summary>Costo unitario estimado que ingresa el usuario al armar el ítem (0 si no lo
+    /// conoce). El subtotal presupuestado del ítem es
+    /// CostoEstimado * CantidadSolicitada * (CantidadPeriodos ?? 1).</summary>
+    [Column(TypeName = "decimal(12,2)")]
+    public decimal CostoEstimado { get; set; }
+
+    /// <summary>"Mensual" / "Anual" — solo se completa en ítems de suscripción recurrente
+    /// (ver <see cref="Data.CatalogoSuscripciones"/>); null en el resto de los ítems.</summary>
+    public string? TipoSuscripcion { get; set; }
+
+    /// <summary>Cantidad de meses (si Mensual) o años (si Anual) de la suscripción. Null en
+    /// ítems que no son suscripción.</summary>
+    public int? CantidadPeriodos { get; set; }
+
     public byte PrioridadId { get; set; }
     public string? UbicacionEspecifica { get; set; }
 

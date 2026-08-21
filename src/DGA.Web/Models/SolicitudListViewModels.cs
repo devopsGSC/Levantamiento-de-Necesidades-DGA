@@ -37,6 +37,9 @@ public class SolicitudDetailViewModel
 
     public List<SolicitudDetailItemViewModel> Items { get; set; } = new();
     public List<SolicitudHistorialItemViewModel> Historial { get; set; } = new();
+
+    /// <summary>Suma de los subtotales de todos los ítems — $0 en los ítems sin costo estimado.</summary>
+    public decimal MontoPresupuestadoTotal => Items.Sum(i => i.Subtotal);
 }
 
 public class SolicitudDetailItemViewModel
@@ -47,6 +50,10 @@ public class SolicitudDetailItemViewModel
     public string? Elemento { get; set; }
     public string? Detalle { get; set; }
     public int CantidadSolicitada { get; set; }
+    public decimal CostoEstimado { get; set; }
+    public string? TipoSuscripcion { get; set; }
+    public int? CantidadPeriodos { get; set; }
+    public decimal Subtotal => CostoEstimado * CantidadSolicitada * (CantidadPeriodos ?? 1);
     public string Prioridad { get; set; } = string.Empty;
     public string? UbicacionEspecifica { get; set; }
     public string? JustificacionItem { get; set; }

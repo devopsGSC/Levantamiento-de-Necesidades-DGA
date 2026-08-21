@@ -43,6 +43,12 @@ public class SolicitudFormViewModel
 
     public string ItemsExistentesJson { get; set; } = "[]";
 
+    /// <summary>IDs de Elemento/Detalle que son suscripción recurrente (ver
+    /// DGA.Web.Data.CatalogoSuscripciones) — el JS del formulario los usa para mostrar los
+    /// campos de Tipo de Suscripción / Cantidad de Períodos cuando corresponde.</summary>
+    public int[] ElementoIdsSuscripcion { get; set; } = DGA.Web.Data.CatalogoSuscripciones.ElementoIds;
+    public int[] DetalleIdsSuscripcion { get; set; } = DGA.Web.Data.CatalogoSuscripciones.DetalleIds;
+
     public bool EsEdicion => Id > 0;
     public bool PuedeDescartar { get; set; }
 }
@@ -63,6 +69,9 @@ public class SolicitudItemFormViewModel
     public int? DetalleId { get; set; }
     public string? DetalleNombre { get; set; }
     public int CantidadSolicitada { get; set; }
+    public decimal CostoEstimado { get; set; }
+    public string? TipoSuscripcion { get; set; }
+    public int? CantidadPeriodos { get; set; }
     public byte PrioridadId { get; set; }
     public string? UbicacionEspecifica { get; set; }
     public string? JustificacionItem { get; set; }

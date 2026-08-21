@@ -1,0 +1,22 @@
+@model string
+@{
+    // Clase por nombre de Estado (ver database/01_schema_dga.sql, INSERT EstadosSolicitud) —
+    // un color propio por estado para poder distinguirlos de un vistazo en las listas.
+    var clase = Model switch
+    {
+        "Guardado Borrador" => "is-estado-borrador",
+        "Solicitado" => "is-estado-solicitado",
+        "Pendiente" => "is-estado-pendiente",
+        "Aprobado" => "is-estado-aprobado",
+        "Denegado" => "is-estado-denegado",
+        "Comprado" => "is-estado-comprado",
+        "Realizado" => "is-estado-realizado",
+        "En Proceso" => "is-estado-enproceso",
+        "Rechazado" => "is-estado-rechazado",
+        "Observado" => "is-estado-observado",
+        "Cotizado" => "is-estado-cotizado",
+        "Finalizado" => "is-estado-finalizado",
+        _ => "",
+    };
+}
+<span class="status-badge @clase">@Model</span>

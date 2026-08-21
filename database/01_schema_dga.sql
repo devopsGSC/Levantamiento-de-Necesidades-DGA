@@ -511,7 +511,7 @@ INSERT INTO dbo.Detalles (Id, ElementoId, Nombre, Orden) VALUES
 (4010203, 40102, N'Móvil', 3),
 (4010204, 40102, N'Básculas', 4),
 (4010205, 40102, N'Detectores de sustancias', 5),
--- 40103 Redes y telecomunicaciones (14)
+-- 40103 Redes y telecomunicaciones (15)
 (4010301, 40103, N'Repetidores', 1),
 (4010302, 40103, N'Antenas', 2),
 (4010303, 40103, N'Starlink', 3),
@@ -526,6 +526,7 @@ INSERT INTO dbo.Detalles (Id, ElementoId, Nombre, Orden) VALUES
 (4010312, 40103, N'Telefonía Fija', 12),
 (4010313, 40103, N'Telefonía Móvil', 13),
 (4010314, 40103, N'PBX', 14),
+(4010315, 40103, N'Suscripción Internet Starlink', 15),
 -- 40201 Mobiliario de oficina (27)
 (4020101, 40201, N'Sillas ejecutivas', 1),
 (4020102, 40201, N'Sillas de espera', 2),

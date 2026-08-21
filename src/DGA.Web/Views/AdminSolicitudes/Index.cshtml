@@ -47,7 +47,7 @@
                                 <td>@s.Componente</td>
                                 <td>@s.Elemento</td>
                                 <td>@s.Detalle</td>
-                                <td><span class="status-badge">@s.Estado</span></td>
+                                <td><partial name="_EstadoBadge" model="@s.Estado" /></td>
                                 <td>
                                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                                         <a asp-action="DescargarPdf" asp-route-id="@s.Id" class="btn btn-outline btn-sm" title="Descargar PDF">PDF</a>

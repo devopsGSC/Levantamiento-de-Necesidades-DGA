@@ -22,6 +22,9 @@
       detalleId: i.detalleId ?? null,
       detalleNombre: i.detalleNombre ?? null,
       cantidadSolicitada: i.cantidadSolicitada,
+      costoEstimado: i.costoEstimado ?? 0,
+      tipoSuscripcion: i.tipoSuscripcion ?? null,
+      cantidadPeriodos: i.cantidadPeriodos ?? null,
       prioridadId: i.prioridadId,
       prioridadNombre: i.prioridadNombre ?? prioridadNombrePorId(i.prioridadId),
       ubicacionEspecifica: i.ubicacionEspecifica ?? null,
@@ -34,6 +37,10 @@
   function prioridadNombrePorId(id) {
     const opt = document.querySelector('#PrioridadId option[value="' + id + '"]');
     return opt ? opt.textContent : '';
+  }
+
+  function formatoMoneda(valor) {
+    return '$' + (Number(valor) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   // ---------------------------------------------------------------
@@ -172,6 +179,155 @@
   const wrapElementoLibre = document.getElementById('wrap-elemento-libre');
   const wrapDetalle = document.getElementById('wrap-detalle');
 
+  // ---------------------------------------------------------------
+  // Ítems de suscripción (Internet, Telefonía) — algunos puntos fijos del catálogo
+  // (ver DGA.Web.Data.CatalogoSuscripciones, IDs recibidos en boot) no son una compra
+  // única: piden Tipo de Suscripción (Mensual/Anual) + Cantidad de Períodos, y el
+  // subtotal del ítem multiplica por esa cantidad además de Costo × Cantidad.
+  // ---------------------------------------------------------------
+
+  const elementoIdsSuscripcion = boot.elementoIdsSuscripcion || [];
+  const detalleIdsSuscripcion = boot.detalleIdsSuscripcion || [];
+  const wrapSuscripcion = document.getElementById('wrap-suscripcion');
+  const tipoSuscripcionSel = document.getElementById('TipoSuscripcion');
+  const cantidadPeriodosInput = document.getElementById('CantidadPeriodos');
+  const labelCantidadPeriodos = document.getElementById('label-cantidad-periodos');
+  const labelCostoEstimado = document.getElementById('label-costo-estimado');
+
+  function actualizarEtiquetaPeriodos() {
+    labelCantidadPeriodos.textContent = tipoSuscripcionSel.value === 'Anual' ? 'Cantidad de Años' : 'Cantidad de Meses';
+  }
+  tipoSuscripcionSel.addEventListener('change', actualizarEtiquetaPeriodos);
+
+  /** Determina si el Elemento/Detalle elegido en este momento es una suscripción, y
+   * muestra u oculta los campos de Tipo de Suscripción / Cantidad de Períodos. */
+  function actualizarCamposSuscripcion() {
+    let esSuscripcion;
+    if (!wrapDetalle.hidden) {
+      esSuscripcion = detalleSel.value !== '' && detalleIdsSuscripcion.includes(Number(detalleSel.value));
+    } else if (!wrapElementoChecklist.hidden) {
+      const marcado = elementoChecklist.querySelector('input:checked');
+      esSuscripcion = !!marcado && elementoIdsSuscripcion.includes(Number(marcado.value));
+    } else if (!wrapElementoSelect.hidden) {
+      esSuscripcion = elementoSel.value !== '' && elementoIdsSuscripcion.includes(Number(elementoSel.value));
+    } else {
+      esSuscripcion = false; // "elemento libre" (texto) no tiene id de catálogo
+    }
+
+    wrapSuscripcion.hidden = !esSuscripcion;
+    labelCostoEstimado.textContent = esSuscripcion ? 'Costo Estimado (por período)' : 'Costo Estimado (unitario)';
+    if (!esSuscripcion) {
+      tipoSuscripcionSel.value = 'Mensual';
+      cantidadPeriodosInput.value = 1;
+    }
+    actualizarEtiquetaPeriodos();
+  }
+  elementoChecklist.addEventListener('change', actualizarCamposSuscripcion);
+  detalleSel.addEventListener('change', actualizarCamposSuscripcion);
+
+  // ---------------------------------------------------------------
+  // "Agregar nuevo" de Elemento / Detalle — cualquier usuario puede sumar al
+  // catálogo lo que no encuentra en la lista mientras completa un ítem.
+  // ---------------------------------------------------------------
+
+  const agregarElemento = document.getElementById('agregar-elemento');
+  const btnMostrarAgregarElemento = document.getElementById('btn-mostrar-agregar-elemento');
+  const formAgregarElemento = document.getElementById('form-agregar-elemento');
+  const nuevoElementoNombre = document.getElementById('nuevo-elemento-nombre');
+  const btnGuardarElemento = document.getElementById('btn-guardar-elemento');
+  const btnCancelarElemento = document.getElementById('btn-cancelar-elemento');
+
+  const btnMostrarAgregarDetalle = document.getElementById('btn-mostrar-agregar-detalle');
+  const formAgregarDetalle = document.getElementById('form-agregar-detalle');
+  const nuevoDetalleNombre = document.getElementById('nuevo-detalle-nombre');
+  const btnGuardarDetalle = document.getElementById('btn-guardar-detalle');
+  const btnCancelarDetalle = document.getElementById('btn-cancelar-detalle');
+
+  function ocultarFormAgregarElemento() {
+    formAgregarElemento.hidden = true;
+    btnMostrarAgregarElemento.hidden = false;
+    nuevoElementoNombre.value = '';
+  }
+  function ocultarFormAgregarDetalle() {
+    formAgregarDetalle.hidden = true;
+    btnMostrarAgregarDetalle.hidden = false;
+    nuevoDetalleNombre.value = '';
+  }
+
+  btnMostrarAgregarElemento.addEventListener('click', () => {
+    formAgregarElemento.hidden = false;
+    btnMostrarAgregarElemento.hidden = true;
+    nuevoElementoNombre.focus();
+  });
+  btnCancelarElemento.addEventListener('click', ocultarFormAgregarElemento);
+
+  btnMostrarAgregarDetalle.addEventListener('click', () => {
+    formAgregarDetalle.hidden = false;
+    btnMostrarAgregarDetalle.hidden = true;
+    nuevoDetalleNombre.focus();
+  });
+  btnCancelarDetalle.addEventListener('click', ocultarFormAgregarDetalle);
+
+  async function agregarElementoAlCatalogo() {
+    const nombre = nuevoElementoNombre.value.trim();
+    if (!nombre) {
+      dgaToast('Ingresá el nombre del nuevo elemento.', 'warning');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('subcomponenteId', subcomponenteSel.value);
+    fd.append('nombre', nombre);
+    fd.append('__RequestVerificationToken', token);
+    dgaBotonCargando(btnGuardarElemento, true);
+    try {
+      const resp = await fetch('/Catalogos/CrearElemento', { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (!resp.ok) {
+        dgaToast(data.error || 'No se pudo agregar el elemento.', 'danger');
+        return;
+      }
+      ocultarFormAgregarElemento();
+      await cargarElementos(subcomponenteSel.value, data.id);
+      dgaToast('"' + data.nombre + '" agregado. Ya está seleccionado.', 'success');
+    } finally {
+      dgaBotonCargando(btnGuardarElemento, false);
+    }
+  }
+  btnGuardarElemento.addEventListener('click', agregarElementoAlCatalogo);
+  nuevoElementoNombre.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); agregarElementoAlCatalogo(); }
+  });
+
+  async function agregarDetalleAlCatalogo() {
+    const nombre = nuevoDetalleNombre.value.trim();
+    if (!nombre) {
+      dgaToast('Ingresá el nombre del nuevo detalle.', 'warning');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('elementoId', elementoSel.value);
+    fd.append('nombre', nombre);
+    fd.append('__RequestVerificationToken', token);
+    dgaBotonCargando(btnGuardarDetalle, true);
+    try {
+      const resp = await fetch('/Catalogos/CrearDetalle', { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (!resp.ok) {
+        dgaToast(data.error || 'No se pudo agregar el detalle.', 'danger');
+        return;
+      }
+      ocultarFormAgregarDetalle();
+      await cargarDetalles(elementoSel.value, data.id);
+      dgaToast('"' + data.nombre + '" agregado. Ya está seleccionado.', 'success');
+    } finally {
+      dgaBotonCargando(btnGuardarDetalle, false);
+    }
+  }
+  btnGuardarDetalle.addEventListener('click', agregarDetalleAlCatalogo);
+  nuevoDetalleNombre.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); agregarDetalleAlCatalogo(); }
+  });
+
   // Filtra la lista de radios de "Elemento / Necesidad" a medida que se escribe —
   // igual que combo-buscable.js pero sobre una lista siempre visible (no un <select>
   // oculto detrás de un popup), porque acá puede haber 30+ opciones para escanear.
@@ -231,9 +387,12 @@
       wrapElementoSelect.hidden = true;
       wrapElementoChecklist.hidden = true;
       wrapElementoLibre.hidden = false;
+      agregarElemento.hidden = true;
       elementoSel.disabled = true;
       return;
     }
+
+    agregarElemento.hidden = false;
 
     // Checklist (lista con selección única, más fácil de escanear que un combo
     // largo) solo cuando hay más de una opción Y ninguna necesita el 4º nivel
@@ -258,6 +417,7 @@
         const cb = elementoChecklist.querySelector('input[value="' + seleccionarElemento + '"]');
         if (cb) cb.checked = true;
       }
+      actualizarCamposSuscripcion();
       return;
     }
 
@@ -275,7 +435,9 @@
     const tieneDetalle = opt && (opt.dataset.tieneDetalle === 'True' || opt.dataset.tieneDetalle === 'true');
     if (!tieneDetalle) {
       wrapDetalle.hidden = true;
+      ocultarFormAgregarDetalle();
       detalleSel.innerHTML = '<option value="">Seleccione el detalle exacto requerido</option>';
+      actualizarCamposSuscripcion();
       return;
     }
     wrapDetalle.hidden = false;
@@ -289,6 +451,7 @@
       datos.map((d) => `<option value="${d.id}">${escapeHtml(d.nombre)}</option>`).join('');
     detalleSel.disabled = false;
     if (seleccionarDetalle) detalleSel.value = String(seleccionarDetalle);
+    actualizarCamposSuscripcion();
   }
 
   componenteSel.addEventListener('change', () => cargarSubcomponentes(componenteSel.value, null));
@@ -300,6 +463,13 @@
     wrapElementoChecklist.hidden = true;
     wrapElementoLibre.hidden = true;
     wrapDetalle.hidden = true;
+    agregarElemento.hidden = true;
+    ocultarFormAgregarElemento();
+    ocultarFormAgregarDetalle();
+    wrapSuscripcion.hidden = true;
+    labelCostoEstimado.textContent = 'Costo Estimado (unitario)';
+    tipoSuscripcionSel.value = 'Mensual';
+    cantidadPeriodosInput.value = 1;
     elementoSel.innerHTML = '<option value="">Seleccione elemento específico</option>';
     elementoSel.disabled = true;
     elementoChecklist.innerHTML = '';
@@ -386,14 +556,17 @@
       btn.addEventListener('click', () => {
         const idx = Number(btn.dataset.idx);
         const foto = fotosActuales[idx];
-        if (foto.tipo === 'nueva') {
-          const fd = new FormData();
-          fd.append('token', foto.token);
-          fd.append('__RequestVerificationToken', token);
-          fetch('/Solicitudes/EliminarFotoTemp', { method: 'POST', body: fd });
-        }
-        fotosActuales.splice(idx, 1);
-        renderPhotoChips();
+        dgaConfirm('¿Quitar la foto "' + foto.nombre + '"?', { peligroso: true, textoConfirmar: 'Quitar' }).then((ok) => {
+          if (!ok) return;
+          if (foto.tipo === 'nueva') {
+            const fd = new FormData();
+            fd.append('token', foto.token);
+            fd.append('__RequestVerificationToken', token);
+            fetch('/Solicitudes/EliminarFotoTemp', { method: 'POST', body: fd });
+          }
+          fotosActuales.splice(idx, 1);
+          renderPhotoChips();
+        });
       });
     });
   }
@@ -420,6 +593,9 @@
       subcomponenteNombre: subcomponenteSel.selectedOptions[0].textContent,
       ...camposElemento,
       cantidadSolicitada: Number(document.getElementById('CantidadSolicitada').value) || 1,
+      costoEstimado: Number(document.getElementById('CostoEstimado').value) || 0,
+      tipoSuscripcion: wrapSuscripcion.hidden ? null : tipoSuscripcionSel.value,
+      cantidadPeriodos: wrapSuscripcion.hidden ? null : (Number(cantidadPeriodosInput.value) || 1),
       prioridadId: Number(document.getElementById('PrioridadId').value),
       prioridadNombre: document.getElementById('PrioridadId').selectedOptions[0].textContent,
       ubicacionEspecifica: document.getElementById('UbicacionEspecifica').value.trim() || null,
@@ -496,15 +672,25 @@
     subcomponenteSel.disabled = true;
     resetElementoYDetalle();
     document.getElementById('CantidadSolicitada').value = 1;
+    document.getElementById('CostoEstimado').value = 0;
     document.getElementById('UbicacionEspecifica').value = '';
     document.getElementById('JustificacionItem').value = '';
     fotosActuales = [];
     renderPhotoChips();
   }
 
+  function subtotalItem(it) {
+    return (Number(it.costoEstimado) || 0) * it.cantidadSolicitada * (it.cantidadPeriodos || 1);
+  }
+
+  function montoPresupuestadoTotal() {
+    return items.reduce((acc, it) => acc + subtotalItem(it), 0);
+  }
+
   function renderTablaItems() {
     contadorItems.textContent = String(items.length);
     btnFinalizar.disabled = items.length === 0;
+    document.getElementById('monto-presupuestado-total').textContent = formatoMoneda(montoPresupuestadoTotal());
 
     if (items.length === 0) {
       tablaBody.innerHTML = '';
@@ -515,14 +701,18 @@
     tablaBody.innerHTML = items.map((it, idx) => {
       const elemento = it.elementoNombre || it.elementoLibre || '-';
       const detalle = it.detalleNombre ? ` — ${escapeHtml(it.detalleNombre)}` : '';
+      const suscripcion = it.tipoSuscripcion ? ` <span class="muted">(${escapeHtml(it.tipoSuscripcion)} × ${it.cantidadPeriodos})</span>` : '';
       const totalFotos = it.fotografiasNuevas.length + it.fotografiasExistentes.length;
+      const subtotal = subtotalItem(it);
       return `<tr>
         <td>${idx + 1}</td>
         <td>${escapeHtml(it.prioridadNombre)}</td>
         <td>${escapeHtml(it.componenteNombre)}<br /><span class="muted">${escapeHtml(it.subcomponenteNombre)}</span></td>
-        <td>${escapeHtml(elemento)}${detalle}</td>
+        <td>${escapeHtml(elemento)}${detalle}${suscripcion}</td>
         <td>${escapeHtml(it.ubicacionEspecifica || '-')}</td>
         <td>${it.cantidadSolicitada}</td>
+        <td>${formatoMoneda(it.costoEstimado)}</td>
+        <td>${formatoMoneda(subtotal)}</td>
         <td>${totalFotos || '-'}</td>
         <td>
           <button type="button" class="btn btn-outline btn-sm" data-accion="editar" data-idx="${idx}">Editar</button>
@@ -533,13 +723,28 @@
 
     tablaBody.querySelectorAll('[data-accion="eliminar"]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        items.splice(Number(btn.dataset.idx), 1);
-        items.forEach((it, i) => (it.numeroItem = i + 1));
-        renderTablaItems();
+        const idx = Number(btn.dataset.idx);
+        dgaConfirm('¿Eliminar el ítem #' + (idx + 1) + ' de la lista?', { peligroso: true, textoConfirmar: 'Eliminar' }).then((ok) => {
+          if (!ok) return;
+          items.splice(idx, 1);
+          items.forEach((it, i) => (it.numeroItem = i + 1));
+          renderTablaItems();
+        });
       });
     });
     tablaBody.querySelectorAll('[data-accion="editar"]').forEach((btn) => {
-      btn.addEventListener('click', () => cargarItemParaEditar(Number(btn.dataset.idx)));
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        // Si ya hay datos sin guardar en el ítem que se está armando (uno nuevo a medio
+        // completar, o ya se estaba editando otro), avisar antes de descartarlos.
+        const hayDatosSinGuardar = indiceEnEdicion !== idx && (componenteSel.value || indiceEnEdicion !== null);
+        if (!hayDatosSinGuardar) {
+          cargarItemParaEditar(idx);
+          return;
+        }
+        dgaConfirm('Tenés datos sin guardar en el ítem que estás armando. ¿Descartarlos y editar este otro ítem?', { peligroso: true, textoConfirmar: 'Descartar y editar' })
+          .then((ok) => { if (ok) cargarItemParaEditar(idx); });
+      });
     });
   }
 
@@ -560,6 +765,12 @@
       elementoLibre.value = it.elementoLibre || '';
     }
     document.getElementById('CantidadSolicitada').value = it.cantidadSolicitada;
+    document.getElementById('CostoEstimado').value = it.costoEstimado ?? 0;
+    if (!wrapSuscripcion.hidden && it.tipoSuscripcion) {
+      tipoSuscripcionSel.value = it.tipoSuscripcion;
+      cantidadPeriodosInput.value = it.cantidadPeriodos ?? 1;
+      actualizarEtiquetaPeriodos();
+    }
     document.getElementById('PrioridadId').value = String(it.prioridadId);
     document.getElementById('UbicacionEspecifica').value = it.ubicacionEspecifica || '';
     document.getElementById('JustificacionItem').value = it.justificacionItem || '';
@@ -604,6 +815,7 @@
     document.getElementById('resumen-responsable').textContent = document.querySelector('[name="NombreResponsable"]').value || '-';
     document.getElementById('resumen-aduana').textContent = aduanaSel.selectedOptions[0]?.textContent || '-';
     document.getElementById('resumen-items').textContent = String(items.length);
+    document.getElementById('resumen-presupuesto').textContent = formatoMoneda(montoPresupuestadoTotal());
     checkConfirmo.checked = false;
     btnConfirmarEnvio.disabled = true;
     modal.hidden = false;

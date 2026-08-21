@@ -50,7 +50,7 @@
                     {
                         <tr style="border-bottom:1px solid var(--dga-border);">
                             <td style="padding:12px 16px;font-weight:600;">@s.IdSolicitud</td>
-                            <td style="padding:12px 16px;"><span class="status-badge">@s.Estado</span></td>
+                            <td style="padding:12px 16px;"><partial name="_EstadoBadge" model="@s.Estado" /></td>
                             <td style="padding:12px 16px;">@s.NombreResponsable</td>
                             <td style="padding:12px 16px;">@s.FechaRegistro.ToString("dd/MM/yyyy")</td>
                             <td style="padding:12px 16px;">@s.CantidadFotografias</td>

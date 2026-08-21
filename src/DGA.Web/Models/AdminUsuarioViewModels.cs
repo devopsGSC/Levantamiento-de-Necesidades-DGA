@@ -8,6 +8,9 @@ public class AdminUsuarioListItemViewModel
     public string Nombre { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Rol { get; set; } = string.Empty;
+    public string? Cargo { get; set; }
+    public string? Aduana { get; set; }
+    public string? Subdireccion { get; set; }
     public string? Departamento { get; set; }
     public bool Activo { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -40,7 +43,16 @@ public class CrearUsuarioViewModel
     [Display(Name = "Rol")]
     public string Rol { get; set; } = string.Empty;
 
-    [Display(Name = "Departamento")]
+    [Display(Name = "Cargo")]
+    public string? Cargo { get; set; }
+
+    [Display(Name = "Aduana")]
+    public string? Aduana { get; set; }
+
+    [Display(Name = "Subdirección")]
+    public string? Subdireccion { get; set; }
+
+    [Display(Name = "Departamento/Unidad")]
     public string? Departamento { get; set; }
 }
 

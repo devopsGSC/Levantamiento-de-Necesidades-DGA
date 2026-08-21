@@ -27,13 +27,13 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Usuario</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Fecha Creación</th><th>Acciones</th>
+                        <th>Usuario</th><th>Rol</th><th>Cargo</th><th>Aduana</th><th>Subdirección</th><th>Departamento/Unidad</th><th>Estado</th><th>Fecha Creación</th><th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model.Usuarios.Count == 0)
                     {
-                        <tr><td colspan="6" style="text-align:center;color:var(--dga-muted);padding:28px;">No se encontraron usuarios.</td></tr>
+                        <tr><td colspan="9" style="text-align:center;color:var(--dga-muted);padding:28px;">No se encontraron usuarios.</td></tr>
                     }
                     else
                     {
@@ -69,6 +69,9 @@
                                         </div>
                                     }
                                 </td>
+                                <td>@(u.Cargo ?? "-")</td>
+                                <td>@(u.Aduana ?? "-")</td>
+                                <td>@(u.Subdireccion ?? "-")</td>
                                 <td>@(u.Departamento ?? "-")</td>
                                 <td><span class="status-badge @(u.Activo ? "is-success" : "is-danger")">@(u.Activo ? "Activo" : "Inactivo")</span></td>
                                 <td>@u.CreatedAt.ToString("dd/MM/yyyy")</td>

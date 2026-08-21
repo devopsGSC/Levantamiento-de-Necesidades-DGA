@@ -40,6 +40,9 @@ public class AdminUsuariosController(
                 Nombre = usuario.Nombre,
                 Email = usuario.Email ?? string.Empty,
                 Rol = roles.FirstOrDefault() ?? "-",
+                Cargo = usuario.Cargo,
+                Aduana = usuario.Aduana,
+                Subdireccion = usuario.Subdireccion,
                 Departamento = usuario.Departamento,
                 Activo = usuario.Activo,
                 CreatedAt = usuario.CreatedAt,
@@ -81,6 +84,9 @@ public class AdminUsuariosController(
             Email = model.Email,
             EmailConfirmed = true,
             Nombre = model.Nombre,
+            Cargo = model.Cargo,
+            Aduana = model.Aduana,
+            Subdireccion = model.Subdireccion,
             Departamento = model.Departamento,
             Activo = true,
             PrimerInicioSesion = true,
@@ -260,7 +266,6 @@ public class AdminUsuariosController(
                 continue;
             }
 
-            var rol = NormalizarRol(fila.Rol)!;
             var contrasenaTemporal = PasswordGenerator.Generar();
             var usuario = new ApplicationUser
             {
@@ -268,6 +273,9 @@ public class AdminUsuariosController(
                 Email = fila.Email,
                 EmailConfirmed = true,
                 Nombre = fila.Nombre,
+                Cargo = fila.Cargo,
+                Aduana = fila.Aduana,
+                Subdireccion = fila.Subdireccion,
                 Departamento = fila.Departamento,
                 Activo = true,
                 PrimerInicioSesion = true,
@@ -286,7 +294,7 @@ public class AdminUsuariosController(
                 continue;
             }
 
-            await userManager.AddToRoleAsync(usuario, rol);
+            await userManager.AddToRoleAsync(usuario, Roles.Usuario);
 
             await emailSender.SendAsync(
                 fila.Email,
@@ -318,17 +326,6 @@ public class AdminUsuariosController(
         {
             return "Correo duplicado dentro del mismo archivo.";
         }
-        if (NormalizarRol(fila.Rol) is null)
-        {
-            return "El rol debe ser \"Usuario\" o \"Administrador\".";
-        }
-        return null;
-    }
-
-    private static string? NormalizarRol(string rol)
-    {
-        if (string.Equals(rol, Roles.Usuario, StringComparison.OrdinalIgnoreCase)) return Roles.Usuario;
-        if (string.Equals(rol, Roles.Administrador, StringComparison.OrdinalIgnoreCase)) return Roles.Administrador;
         return null;
     }
 

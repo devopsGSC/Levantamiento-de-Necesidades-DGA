@@ -5,6 +5,9 @@ namespace DGA.Web.Data.Entities;
 public class ApplicationUser : IdentityUser<int>
 {
     public string Nombre { get; set; } = string.Empty;
+    public string? Cargo { get; set; }
+    public string? Aduana { get; set; }
+    public string? Subdireccion { get; set; }
     public string? Departamento { get; set; }
     public bool PasswordTemporal { get; set; }
     public bool PrimerInicioSesion { get; set; } = true;

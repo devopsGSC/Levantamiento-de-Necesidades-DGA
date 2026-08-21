@@ -16,4 +16,8 @@ public class ArchivosOptions
     public int MaxArchivosPorItem { get; set; } = 10;
     public long MaxBytesPorArchivo { get; set; } = 10 * 1024 * 1024;
     public string[] TiposPermitidos { get; set; } = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+    /// <summary>La cotización adjunta a un ítem puede ser una imagen (foto de la cotización)
+    /// o un PDF, a diferencia de las fotos del ítem que solo aceptan imagen.</summary>
+    public string[] TiposPermitidosCotizacion { get; set; } = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
 }

@@ -7,6 +7,11 @@ public class SolicitudFormViewModel
     public int Id { get; set; }
     public string? IdSolicitud { get; set; }
 
+    /// <summary>Solo para mostrar en pantalla en una solicitud nueva, antes de guardar —
+    /// próximo correlativo probable (no reservado). Nunca se usa como el IdSolicitud real;
+    /// ese se genera en Guardar() de forma atómica. Ver SolicitudIdGenerator.PrevisualizarProximoIdAsync.</summary>
+    public string? IdSolicitudPrevisualizado { get; set; }
+
     [Required(ErrorMessage = "Ingresá el nombre del responsable.")]
     [Display(Name = "Nombre Solicitante")]
     public string NombreResponsable { get; set; } = string.Empty;
@@ -58,6 +63,9 @@ public record OpcionCatalogo(int Id, string Nombre);
 /// <summary>Forma de cada ítem tal como lo arma/lee el JavaScript del formulario (JSON).</summary>
 public class SolicitudItemFormViewModel
 {
+    /// <summary>Id real del SolicitudItem cuando ya existe (edición) — 0 en un ítem nuevo.
+    /// Se usa solo para poder previsualizar la cotización ya guardada antes de re-guardar.</summary>
+    public int Id { get; set; }
     public int NumeroItem { get; set; }
     public byte ComponenteId { get; set; }
     public string ComponenteNombre { get; set; } = string.Empty;
@@ -70,6 +78,11 @@ public class SolicitudItemFormViewModel
     public string? DetalleNombre { get; set; }
     public int CantidadSolicitada { get; set; }
     public decimal CostoEstimado { get; set; }
+    public string TipoCosto { get; set; } = "Unitario";
+    public string? CotizacionTokenNuevo { get; set; }
+    public string? CotizacionNombreOriginalNuevo { get; set; }
+    public string? CotizacionRutaExistente { get; set; }
+    public string? CotizacionNombreExistente { get; set; }
     public string? TipoSuscripcion { get; set; }
     public int? CantidadPeriodos { get; set; }
     public byte PrioridadId { get; set; }

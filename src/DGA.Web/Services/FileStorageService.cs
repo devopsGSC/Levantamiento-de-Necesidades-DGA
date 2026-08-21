@@ -19,11 +19,19 @@ public class FileStorageService(IOptions<ArchivosOptions> options, IWebHostEnvir
     private string RutaRaizAbsoluta => Path.Combine(env.ContentRootPath, _opciones.CarpetaRaiz);
     private string RutaTemporalAbsoluta => Path.Combine(RutaRaizAbsoluta, "_temp");
 
-    public async Task<string> GuardarTemporalAsync(IFormFile archivo)
+    public Task<string> GuardarTemporalAsync(IFormFile archivo) =>
+        GuardarTemporalAsync(archivo, _opciones.TiposPermitidos, "JPG, PNG, GIF o WebP");
+
+    /// <summary>Igual que <see cref="GuardarTemporalAsync(IFormFile)"/> pero para la
+    /// cotización adjunta a un ítem, que además de imagen acepta PDF.</summary>
+    public Task<string> GuardarTemporalCotizacionAsync(IFormFile archivo) =>
+        GuardarTemporalAsync(archivo, _opciones.TiposPermitidosCotizacion, "JPG, PNG, GIF, WebP o PDF");
+
+    private async Task<string> GuardarTemporalAsync(IFormFile archivo, string[] tiposPermitidos, string descripcionTipos)
     {
-        if (!_opciones.TiposPermitidos.Contains(archivo.ContentType))
+        if (!tiposPermitidos.Contains(archivo.ContentType))
         {
-            throw new ArchivoInvalidoException($"Formato no permitido: {archivo.ContentType}. Solo JPG, PNG, GIF o WebP.");
+            throw new ArchivoInvalidoException($"Formato no permitido: {archivo.ContentType}. Solo {descripcionTipos}.");
         }
         if (archivo.Length > _opciones.MaxBytesPorArchivo)
         {
@@ -86,4 +94,16 @@ public class FileStorageService(IOptions<ArchivosOptions> options, IWebHostEnvir
 
     /// <summary>Evita path traversal: nos quedamos solo con el nombre de archivo, nunca con segmentos de carpeta.</summary>
     private static string SoloNombreArchivo(string valor) => Path.GetFileName(valor);
+
+    /// <summary>Content-Type real según la extensión — para que un PDF se previsualice en el
+    /// navegador en vez de forzar la descarga (que es lo que pasa con "application/octet-stream").</summary>
+    public static string ContentTypePorExtension(string ruta) => Path.GetExtension(ruta).ToLowerInvariant() switch
+    {
+        ".pdf" => "application/pdf",
+        ".png" => "image/png",
+        ".gif" => "image/gif",
+        ".webp" => "image/webp",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        _ => "application/octet-stream",
+    };
 }

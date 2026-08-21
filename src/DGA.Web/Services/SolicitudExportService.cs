@@ -16,7 +16,8 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
 
     private static string FormatoMoneda(decimal monto) => monto.ToString("$#,##0.00", System.Globalization.CultureInfo.InvariantCulture);
 
-    private static decimal Subtotal(SolicitudItem item) => item.CostoEstimado * item.CantidadSolicitada * (item.CantidadPeriodos ?? 1);
+    private static decimal Subtotal(SolicitudItem item) =>
+        item.CostoEstimado * (item.TipoCosto == "Total" ? 1 : item.CantidadSolicitada) * (item.CantidadPeriodos ?? 1);
 
     /// <summary>Texto de la columna Detalle — para ítems de suscripción (Internet,
     /// Telefonía) muestra el Tipo/Cantidad de Períodos en vez de "-" cuando el ítem no
@@ -118,13 +119,14 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
                             tabla.ColumnsDefinition(c =>
                             {
                                 c.ConstantColumn(20);
-                                c.RelativeColumn(1.5f);
-                                c.RelativeColumn(1.5f);
-                                c.RelativeColumn(1.6f);
                                 c.RelativeColumn(1.4f);
-                                c.ConstantColumn(26);
-                                c.ConstantColumn(50);
+                                c.RelativeColumn(1.4f);
+                                c.RelativeColumn(1.5f);
+                                c.RelativeColumn(1.3f);
+                                c.ConstantColumn(24);
+                                c.ConstantColumn(58);
                                 c.ConstantColumn(55);
+                                c.ConstantColumn(30);
                             });
 
                             void Encabezado(string texto) =>
@@ -133,7 +135,7 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
 
                             Encabezado("N°"); Encabezado("Componente"); Encabezado("Subcomponente");
                             Encabezado("Elemento"); Encabezado("Detalle"); Encabezado("Cant.");
-                            Encabezado("Costo Est."); Encabezado("Subtotal");
+                            Encabezado("Costo Est."); Encabezado("Subtotal"); Encabezado("Cotiz.");
 
                             foreach (var item in itemsOrdenados)
                             {
@@ -145,16 +147,17 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
                                 CeldaItem(tabla.Cell()).Text(item.Elemento?.Nombre ?? item.ElementoLibre ?? "-").FontSize(8.5f);
                                 CeldaItem(tabla.Cell()).Text(DetalleTexto(item)).FontSize(8.5f);
                                 CeldaItem(tabla.Cell()).AlignCenter().Text(item.CantidadSolicitada.ToString()).SemiBold();
-                                CeldaItem(tabla.Cell()).AlignRight().Text(FormatoMoneda(item.CostoEstimado)).FontSize(8f);
+                                CeldaItem(tabla.Cell()).AlignRight().Text($"{FormatoMoneda(item.CostoEstimado)} ({(item.TipoCosto == "Total" ? "Tot." : "Unit.")})").FontSize(7.5f);
                                 CeldaItem(tabla.Cell()).AlignRight().Text(FormatoMoneda(Subtotal(item))).FontSize(8f).SemiBold();
+                                CeldaItem(tabla.Cell()).AlignCenter().Text(item.CotizacionRuta is null ? "-" : "Sí").FontSize(8.5f);
                             }
 
                             tabla.Cell().ColumnSpan(5).Background(Colors.BlueGrey.Lighten5).Padding(6).AlignRight().Text("TOTAL DE CANTIDADES:").Bold().FontSize(8.5f);
                             tabla.Cell().Background(Colors.BlueGrey.Lighten5).Padding(6).AlignCenter().Text(itemsOrdenados.Sum(i => i.CantidadSolicitada).ToString()).Bold();
-                            tabla.Cell().ColumnSpan(2).Background(Colors.BlueGrey.Lighten5);
+                            tabla.Cell().ColumnSpan(3).Background(Colors.BlueGrey.Lighten5);
 
                             tabla.Cell().ColumnSpan(7).Background(Colors.BlueGrey.Lighten5).Padding(6).AlignRight().Text("MONTO PRESUPUESTADO TOTAL:").Bold().FontSize(8.5f);
-                            tabla.Cell().Background(Colors.BlueGrey.Lighten5).Padding(6).AlignRight().Text(FormatoMoneda(itemsOrdenados.Sum(Subtotal))).Bold().FontSize(8.5f);
+                            tabla.Cell().ColumnSpan(2).Background(Colors.BlueGrey.Lighten5).Padding(6).AlignRight().Text(FormatoMoneda(itemsOrdenados.Sum(Subtotal))).Bold().FontSize(8.5f);
                         });
                     });
 
@@ -268,7 +271,7 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
         hojaGeneral.Columns().Style.Alignment.WrapText = true;
 
         var hojaItems = libro.Worksheets.Add("Ítems");
-        string[] encabezados = ["N°", "Componente", "Subcomponente", "Elemento", "Detalle", "Cantidad", "Costo Estimado", "Subtotal", "Prioridad", "Ubicación Específica", "Justificación del Ítem", "Fotografías"];
+        string[] encabezados = ["N°", "Componente", "Subcomponente", "Elemento", "Detalle", "Cantidad", "Costo Estimado", "Tipo de Costo", "Subtotal", "Cotización Adjunta", "Prioridad", "Ubicación Específica", "Justificación del Ítem", "Fotografías"];
         for (var c = 0; c < encabezados.Length; c++)
         {
             hojaItems.Cell(1, c + 1).Value = encabezados[c];
@@ -286,23 +289,25 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
             hojaItems.Cell(fila2, 6).Value = item.CantidadSolicitada;
             hojaItems.Cell(fila2, 7).Value = item.CostoEstimado;
             hojaItems.Cell(fila2, 7).Style.NumberFormat.Format = "$#,##0.00";
-            hojaItems.Cell(fila2, 8).Value = Subtotal(item);
-            hojaItems.Cell(fila2, 8).Style.NumberFormat.Format = "$#,##0.00";
-            hojaItems.Cell(fila2, 9).Value = item.Prioridad.Nombre;
-            hojaItems.Cell(fila2, 10).Value = item.UbicacionEspecifica ?? "-";
-            hojaItems.Cell(fila2, 11).Value = item.JustificacionItem ?? "-";
-            hojaItems.Cell(fila2, 12).Value = item.Fotografias.Count;
+            hojaItems.Cell(fila2, 8).Value = item.TipoCosto;
+            hojaItems.Cell(fila2, 9).Value = Subtotal(item);
+            hojaItems.Cell(fila2, 9).Style.NumberFormat.Format = "$#,##0.00";
+            hojaItems.Cell(fila2, 10).Value = item.CotizacionNombreOriginal ?? "-";
+            hojaItems.Cell(fila2, 11).Value = item.Prioridad.Nombre;
+            hojaItems.Cell(fila2, 12).Value = item.UbicacionEspecifica ?? "-";
+            hojaItems.Cell(fila2, 13).Value = item.JustificacionItem ?? "-";
+            hojaItems.Cell(fila2, 14).Value = item.Fotografias.Count;
             fila2++;
         }
 
-        hojaItems.Cell(fila2, 7).Value = "TOTAL PRESUPUESTADO:";
-        hojaItems.Cell(fila2, 7).Style.Font.SetBold();
-        hojaItems.Cell(fila2, 8).Value = s.Items.Sum(Subtotal);
-        hojaItems.Cell(fila2, 8).Style.NumberFormat.Format = "$#,##0.00";
+        hojaItems.Cell(fila2, 8).Value = "TOTAL PRESUPUESTADO:";
         hojaItems.Cell(fila2, 8).Style.Font.SetBold();
+        hojaItems.Cell(fila2, 9).Value = s.Items.Sum(Subtotal);
+        hojaItems.Cell(fila2, 9).Style.NumberFormat.Format = "$#,##0.00";
+        hojaItems.Cell(fila2, 9).Style.Font.SetBold();
 
         hojaItems.Columns().AdjustToContents();
-        hojaItems.Column(11).Width = 50;
+        hojaItems.Column(13).Width = 50;
 
         using var memoria = new MemoryStream();
         libro.SaveAs(memoria);

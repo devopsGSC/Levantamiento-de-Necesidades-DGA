@@ -44,6 +44,8 @@ public class SolicitudDetailViewModel
 
 public class SolicitudDetailItemViewModel
 {
+    /// <summary>Id real del SolicitudItem — necesario para armar el link de la cotización adjunta.</summary>
+    public int Id { get; set; }
     public int NumeroItem { get; set; }
     public string Componente { get; set; } = string.Empty;
     public string Subcomponente { get; set; } = string.Empty;
@@ -51,9 +53,12 @@ public class SolicitudDetailItemViewModel
     public string? Detalle { get; set; }
     public int CantidadSolicitada { get; set; }
     public decimal CostoEstimado { get; set; }
+    public string TipoCosto { get; set; } = "Unitario";
+    public string? CotizacionNombreOriginal { get; set; }
+    public bool TieneCotizacion => !string.IsNullOrEmpty(CotizacionNombreOriginal);
     public string? TipoSuscripcion { get; set; }
     public int? CantidadPeriodos { get; set; }
-    public decimal Subtotal => CostoEstimado * CantidadSolicitada * (CantidadPeriodos ?? 1);
+    public decimal Subtotal => CostoEstimado * (TipoCosto == "Total" ? 1 : CantidadSolicitada) * (CantidadPeriodos ?? 1);
     public string Prioridad { get; set; } = string.Empty;
     public string? UbicacionEspecifica { get; set; }
     public string? JustificacionItem { get; set; }

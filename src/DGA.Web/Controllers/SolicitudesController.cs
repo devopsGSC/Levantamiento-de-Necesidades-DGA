@@ -76,10 +76,14 @@ public class SolicitudesController(
 
     public async Task<IActionResult> Create()
     {
-        // El correlativo SOL-##### se asigna en Guardar(), no acá — NEXT VALUE FOR
-        // consume la secuencia siempre que se llama, así que generarlo con solo abrir
-        // el formulario deja huecos por cada visita que nunca termina en un guardado.
-        var model = new SolicitudFormViewModel();
+        // El correlativo SOL-##### real se asigna en Guardar(), no acá — NEXT VALUE FOR
+        // consume la secuencia siempre que se llama, así que generarlo con solo abrir el
+        // formulario deja huecos por cada visita que nunca termina en un guardado. Lo que
+        // se muestra en pantalla es una previsualización que no reserva nada.
+        var model = new SolicitudFormViewModel
+        {
+            IdSolicitudPrevisualizado = await idGenerator.PrevisualizarProximoIdAsync(),
+        };
         await CargarOpcionesAsync(model);
         return View("Form", model);
     }
@@ -124,6 +128,7 @@ public class SolicitudesController(
 
         var itemsExistentes = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudItemFormViewModel
         {
+            Id = i.Id,
             NumeroItem = i.NumeroItem,
             ComponenteId = i.ComponenteId,
             ComponenteNombre = i.Componente.Nombre,
@@ -136,6 +141,9 @@ public class SolicitudesController(
             DetalleNombre = i.Detalle?.Nombre,
             CantidadSolicitada = i.CantidadSolicitada,
             CostoEstimado = i.CostoEstimado,
+            TipoCosto = i.TipoCosto,
+            CotizacionRutaExistente = i.CotizacionRuta,
+            CotizacionNombreExistente = i.CotizacionNombreOriginal,
             TipoSuscripcion = i.TipoSuscripcion,
             CantidadPeriodos = i.CantidadPeriodos,
             PrioridadId = i.PrioridadId,
@@ -180,9 +188,24 @@ public class SolicitudesController(
         {
             ModelState.AddModelError(string.Empty, "Agregá al menos un ítem antes de guardar.");
         }
+        foreach (var item in items)
+        {
+            if (item.CostoEstimado <= 0)
+            {
+                ModelState.AddModelError(string.Empty, $"Ítem {item.NumeroItem}: ingresá el costo estimado.");
+            }
+            if (item.TipoCosto != "Unitario" && item.TipoCosto != "Total")
+            {
+                ModelState.AddModelError(string.Empty, $"Ítem {item.NumeroItem}: el tipo de costo debe ser Unitario o Total.");
+            }
+        }
 
         if (!ModelState.IsValid)
         {
+            if (model.Id == 0)
+            {
+                model.IdSolicitudPrevisualizado = await idGenerator.PrevisualizarProximoIdAsync();
+            }
             await CargarOpcionesAsync(model);
             model.ItemsExistentesJson = model.ItemsJson;
             return View("Form", model);
@@ -240,6 +263,7 @@ public class SolicitudesController(
                 DetalleId = item.DetalleId,
                 CantidadSolicitada = item.CantidadSolicitada,
                 CostoEstimado = item.CostoEstimado,
+                TipoCosto = item.TipoCosto,
                 TipoSuscripcion = item.TipoSuscripcion,
                 CantidadPeriodos = item.CantidadPeriodos,
                 PrioridadId = item.PrioridadId,
@@ -248,6 +272,24 @@ public class SolicitudesController(
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
+
+            if (!string.IsNullOrEmpty(item.CotizacionTokenNuevo))
+            {
+                try
+                {
+                    nuevoItem.CotizacionRuta = archivos.ConfirmarArchivo(item.CotizacionTokenNuevo, solicitud.IdSolicitud, item.NumeroItem);
+                    nuevoItem.CotizacionNombreOriginal = item.CotizacionNombreOriginalNuevo ?? Path.GetFileName(nuevoItem.CotizacionRuta);
+                }
+                catch (ArchivoInvalidoException ex)
+                {
+                    logger.LogWarning(ex, "No se pudo confirmar la cotización temporal {Token}", item.CotizacionTokenNuevo);
+                }
+            }
+            else if (!string.IsNullOrEmpty(item.CotizacionRutaExistente))
+            {
+                nuevoItem.CotizacionRuta = item.CotizacionRutaExistente;
+                nuevoItem.CotizacionNombreOriginal = item.CotizacionNombreExistente;
+            }
 
             foreach (var existente in item.FotografiasExistentes)
             {
@@ -347,6 +389,7 @@ public class SolicitudesController(
             PuedeDescartar = solicitud.UsuarioId == UsuarioIdActual && Estados.PuedeDescartar(solicitud.EstadoId),
             Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
             {
+                Id = i.Id,
                 NumeroItem = i.NumeroItem,
                 Componente = i.Componente.Nombre,
                 Subcomponente = i.Subcomponente.Nombre,
@@ -354,6 +397,8 @@ public class SolicitudesController(
                 Detalle = i.Detalle?.Nombre,
                 CantidadSolicitada = i.CantidadSolicitada,
                 CostoEstimado = i.CostoEstimado,
+                TipoCosto = i.TipoCosto,
+                CotizacionNombreOriginal = i.CotizacionNombreOriginal,
                 TipoSuscripcion = i.TipoSuscripcion,
                 CantidadPeriodos = i.CantidadPeriodos,
                 Prioridad = i.PrioridadId switch { 1 => "Alta", 2 => "Media", _ => "Baja" },
@@ -487,6 +532,68 @@ public class SolicitudesController(
             return NotFound();
         }
         return PhysicalFile(rutaCompleta, "application/octet-stream");
+    }
+
+    // ------------------------------------------------------------------
+    // Cotización adjunta (imagen o PDF) — misma lógica de subida temporal que las
+    // fotos, pero un solo archivo por ítem y acepta PDF además de imagen.
+    // ------------------------------------------------------------------
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubirCotizacionTemp(IFormFile archivo)
+    {
+        try
+        {
+            var token = await archivos.GuardarTemporalCotizacionAsync(archivo);
+            return Json(new { ok = true, token, nombre = archivo.FileName });
+        }
+        catch (ArchivoInvalidoException ex)
+        {
+            return BadRequest(new { ok = false, error = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult EliminarCotizacionTemp(string token)
+    {
+        archivos.EliminarTemporal(token);
+        return Json(new { ok = true });
+    }
+
+    public IActionResult CotizacionTemp(string token)
+    {
+        var ruta = Path.Combine("_temp", Path.GetFileName(token));
+        var rutaCompleta = archivos.RutaFisicaCompleta(ruta);
+        if (!System.IO.File.Exists(rutaCompleta))
+        {
+            return NotFound();
+        }
+        return PhysicalFile(rutaCompleta, FileStorageService.ContentTypePorExtension(rutaCompleta));
+    }
+
+    public async Task<IActionResult> Cotizacion(int solicitudItemId)
+    {
+        var item = await db.SolicitudItems
+            .Include(i => i.Solicitud)
+            .FirstOrDefaultAsync(i => i.Id == solicitudItemId);
+
+        if (item is null || string.IsNullOrEmpty(item.CotizacionRuta))
+        {
+            return NotFound();
+        }
+        if (item.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin)
+        {
+            return Forbid();
+        }
+
+        var rutaCompleta = archivos.RutaFisicaCompleta(item.CotizacionRuta);
+        if (!System.IO.File.Exists(rutaCompleta))
+        {
+            return NotFound();
+        }
+        return PhysicalFile(rutaCompleta, FileStorageService.ContentTypePorExtension(rutaCompleta));
     }
 
     // ------------------------------------------------------------------

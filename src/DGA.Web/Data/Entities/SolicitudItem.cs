@@ -22,11 +22,21 @@ public class SolicitudItem
 
     public int CantidadSolicitada { get; set; }
 
-    /// <summary>Costo unitario estimado que ingresa el usuario al armar el ítem (0 si no lo
-    /// conoce). El subtotal presupuestado del ítem es
-    /// CostoEstimado * CantidadSolicitada * (CantidadPeriodos ?? 1).</summary>
+    /// <summary>Monto que ingresa el usuario al armar el ítem — obligatorio, mayor a 0. Su
+    /// significado depende de <see cref="TipoCosto"/>: si es "Unitario" es el costo de UNA
+    /// unidad (ej. una cerámica) y el subtotal multiplica por CantidadSolicitada; si es
+    /// "Total" ya incluye todo (ej. cerámica + mano de obra) y no se vuelve a multiplicar.
+    /// El subtotal presupuestado del ítem es
+    /// CostoEstimado * (TipoCosto == "Total" ? 1 : CantidadSolicitada) * (CantidadPeriodos ?? 1).</summary>
     [Column(TypeName = "decimal(12,2)")]
     public decimal CostoEstimado { get; set; }
+
+    /// <summary>"Unitario" / "Total" — qué representa <see cref="CostoEstimado"/>.</summary>
+    public string TipoCosto { get; set; } = "Unitario";
+
+    /// <summary>Ruta en disco de la cotización adjunta (imagen o PDF) — opcional.</summary>
+    public string? CotizacionRuta { get; set; }
+    public string? CotizacionNombreOriginal { get; set; }
 
     /// <summary>"Mensual" / "Anual" — solo se completa en ítems de suscripción recurrente
     /// (ver <see cref="Data.CatalogoSuscripciones"/>); null en el resto de los ítems.</summary>

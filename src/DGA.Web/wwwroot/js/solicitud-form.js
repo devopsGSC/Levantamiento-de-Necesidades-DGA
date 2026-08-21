@@ -11,6 +11,7 @@
 
   function normalizarItemExistente(i) {
     return {
+      id: i.id ?? 0,
       numeroItem: i.numeroItem,
       componenteId: i.componenteId,
       componenteNombre: i.componenteNombre,
@@ -23,6 +24,9 @@
       detalleNombre: i.detalleNombre ?? null,
       cantidadSolicitada: i.cantidadSolicitada,
       costoEstimado: i.costoEstimado ?? 0,
+      tipoCosto: i.tipoCosto || 'Unitario',
+      cotizacionRutaExistente: i.cotizacionRutaExistente ?? null,
+      cotizacionNombreExistente: i.cotizacionNombreExistente ?? null,
       tipoSuscripcion: i.tipoSuscripcion ?? null,
       cantidadPeriodos: i.cantidadPeriodos ?? null,
       prioridadId: i.prioridadId,
@@ -193,6 +197,9 @@
   const cantidadPeriodosInput = document.getElementById('CantidadPeriodos');
   const labelCantidadPeriodos = document.getElementById('label-cantidad-periodos');
   const labelCostoEstimado = document.getElementById('label-costo-estimado');
+  const tipoCostoSel = document.getElementById('TipoCosto');
+  limpiarInvalidoAlEditar(tipoCostoSel);
+  limpiarInvalidoAlEditar(document.getElementById('CostoEstimado'));
 
   function actualizarEtiquetaPeriodos() {
     labelCantidadPeriodos.textContent = tipoSuscripcionSel.value === 'Anual' ? 'Cantidad de Años' : 'Cantidad de Meses';
@@ -215,7 +222,7 @@
     }
 
     wrapSuscripcion.hidden = !esSuscripcion;
-    labelCostoEstimado.textContent = esSuscripcion ? 'Costo Estimado (por período)' : 'Costo Estimado (unitario)';
+    labelCostoEstimado.textContent = 'Costo Estimado *' + (esSuscripcion ? ' (por período)' : '');
     if (!esSuscripcion) {
       tipoSuscripcionSel.value = 'Mensual';
       cantidadPeriodosInput.value = 1;
@@ -467,7 +474,7 @@
     ocultarFormAgregarElemento();
     ocultarFormAgregarDetalle();
     wrapSuscripcion.hidden = true;
-    labelCostoEstimado.textContent = 'Costo Estimado (unitario)';
+    labelCostoEstimado.textContent = 'Costo Estimado *';
     tipoSuscripcionSel.value = 'Mensual';
     cantidadPeriodosInput.value = 1;
     elementoSel.innerHTML = '<option value="">Seleccione elemento específico</option>';
@@ -572,6 +579,105 @@
   }
 
   // ---------------------------------------------------------------
+  // Cotización adjunta al ítem en construcción — un solo archivo (imagen o PDF),
+  // opcional, a diferencia de las fotos que aceptan varias y solo imagen.
+  // ---------------------------------------------------------------
+
+  const dropzoneCotizacion = document.getElementById('dropzone-cotizacion');
+  const inputCotizacion = document.getElementById('input-cotizacion');
+  const cotizacionChip = document.getElementById('cotizacion-chip');
+  /** @type {{tipo: 'nueva', token: string, nombre: string} | {tipo: 'existente', solicitudItemId: number, ruta: string, nombre: string} | null} */
+  let cotizacionActual = null;
+
+  dropzoneCotizacion.addEventListener('click', () => inputCotizacion.click());
+  dropzoneCotizacion.addEventListener('dragover', (e) => e.preventDefault());
+  dropzoneCotizacion.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files[0]) subirCotizacion(e.dataTransfer.files[0]);
+  });
+  inputCotizacion.addEventListener('change', () => {
+    const file = inputCotizacion.files[0];
+    inputCotizacion.value = '';
+    if (file) subirCotizacion(file);
+  });
+
+  async function subirCotizacion(file) {
+    dropzoneCotizacion.classList.add('is-cargando');
+    const spinnerDropzone = window.dgaCrearSpinner();
+    dropzoneCotizacion.prepend(spinnerDropzone);
+    try {
+      const formData = new FormData();
+      formData.append('archivo', file);
+      formData.append('__RequestVerificationToken', token);
+      const resp = await fetch('/Solicitudes/SubirCotizacionTemp', { method: 'POST', body: formData });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        dgaToast(data.error || 'No se pudo subir la cotización.', 'danger');
+        return;
+      }
+      // Si ya había una subida sin guardar todavía (el usuario adjuntó otra encima), se
+      // libera el temporal anterior para no dejar archivos huérfanos.
+      if (cotizacionActual && cotizacionActual.tipo === 'nueva') {
+        const fd = new FormData();
+        fd.append('token', cotizacionActual.token);
+        fd.append('__RequestVerificationToken', token);
+        fetch('/Solicitudes/EliminarCotizacionTemp', { method: 'POST', body: fd });
+      }
+      cotizacionActual = { tipo: 'nueva', token: data.token, nombre: data.nombre };
+    } finally {
+      spinnerDropzone.remove();
+      dropzoneCotizacion.classList.remove('is-cargando');
+    }
+    renderCotizacionChip();
+  }
+
+  function urlPreviewCotizacion(c) {
+    return c.tipo === 'nueva'
+      ? '/Solicitudes/CotizacionTemp?token=' + encodeURIComponent(c.token)
+      : '/Solicitudes/Cotizacion?solicitudItemId=' + c.solicitudItemId;
+  }
+
+  function esImagenPorNombre(nombre) {
+    return /\.(jpe?g|png|gif|webp)$/i.test(nombre || '');
+  }
+
+  function renderCotizacionChip() {
+    if (!cotizacionActual) {
+      cotizacionChip.innerHTML = '';
+      return;
+    }
+    const esImagen = esImagenPorNombre(cotizacionActual.nombre);
+    cotizacionChip.innerHTML = `<span class="photo-chip">
+      ${esImagen
+        ? `<img class="photo-chip__thumb" src="${urlPreviewCotizacion(cotizacionActual)}" alt="" loading="lazy" style="cursor:pointer;" />`
+        : `<span class="photo-chip__thumb" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">📄</span>`}
+      <span>${escapeHtml(cotizacionActual.nombre)}</span>
+      <button type="button" aria-label="Quitar">×</button>
+    </span>`;
+    const previa = cotizacionChip.querySelector('.photo-chip__thumb');
+    previa.addEventListener('click', () => {
+      if (esImagen) {
+        window.dgaLightbox?.(urlPreviewCotizacion(cotizacionActual), cotizacionActual.nombre);
+      } else {
+        window.open(urlPreviewCotizacion(cotizacionActual), '_blank');
+      }
+    });
+    cotizacionChip.querySelector('button').addEventListener('click', () => {
+      dgaConfirm('¿Quitar la cotización adjunta?', { peligroso: true, textoConfirmar: 'Quitar' }).then((ok) => {
+        if (!ok) return;
+        if (cotizacionActual.tipo === 'nueva') {
+          const fd = new FormData();
+          fd.append('token', cotizacionActual.token);
+          fd.append('__RequestVerificationToken', token);
+          fetch('/Solicitudes/EliminarCotizacionTemp', { method: 'POST', body: fd });
+        }
+        cotizacionActual = null;
+        renderCotizacionChip();
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Agregar / Editar / Eliminar ítems de la lista
   // ---------------------------------------------------------------
 
@@ -586,6 +692,7 @@
   /** Arma el objeto ítem a partir de los campos del Elemento (select / checklist / libre) + el resto del formulario. */
   function construirItem(camposElemento, numeroItem) {
     return {
+      id: indiceEnEdicion !== null ? (items[indiceEnEdicion].id || 0) : 0,
       numeroItem,
       componenteId: Number(componenteSel.value),
       componenteNombre: componenteSel.selectedOptions[0].textContent,
@@ -594,6 +701,11 @@
       ...camposElemento,
       cantidadSolicitada: Number(document.getElementById('CantidadSolicitada').value) || 1,
       costoEstimado: Number(document.getElementById('CostoEstimado').value) || 0,
+      tipoCosto: tipoCostoSel.value,
+      cotizacionTokenNuevo: cotizacionActual && cotizacionActual.tipo === 'nueva' ? cotizacionActual.token : null,
+      cotizacionNombreOriginalNuevo: cotizacionActual && cotizacionActual.tipo === 'nueva' ? cotizacionActual.nombre : null,
+      cotizacionRutaExistente: cotizacionActual && cotizacionActual.tipo === 'existente' ? cotizacionActual.ruta : null,
+      cotizacionNombreExistente: cotizacionActual && cotizacionActual.tipo === 'existente' ? cotizacionActual.nombre : null,
       tipoSuscripcion: wrapSuscripcion.hidden ? null : tipoSuscripcionSel.value,
       cantidadPeriodos: wrapSuscripcion.hidden ? null : (Number(cantidadPeriodosInput.value) || 1),
       prioridadId: Number(document.getElementById('PrioridadId').value),
@@ -650,6 +762,16 @@
       };
     }
 
+    if (!tipoCostoSel.value) {
+      marcarInvalido(tipoCostoSel, 'Seleccioná si el Costo Estimado es Unitario o Total.');
+      return;
+    }
+    const costoEstimadoEl = document.getElementById('CostoEstimado');
+    if (!(Number(costoEstimadoEl.value) > 0)) {
+      marcarInvalido(costoEstimadoEl, 'Ingresá el Costo Estimado.');
+      return;
+    }
+
     const eraEdicion = indiceEnEdicion !== null;
     const item = construirItem(camposElemento, eraEdicion ? items[indiceEnEdicion].numeroItem : items.length + 1);
 
@@ -672,7 +794,10 @@
     subcomponenteSel.disabled = true;
     resetElementoYDetalle();
     document.getElementById('CantidadSolicitada').value = 1;
-    document.getElementById('CostoEstimado').value = 0;
+    tipoCostoSel.value = '';
+    document.getElementById('CostoEstimado').value = '';
+    cotizacionActual = null;
+    renderCotizacionChip();
     document.getElementById('UbicacionEspecifica').value = '';
     document.getElementById('JustificacionItem').value = '';
     fotosActuales = [];
@@ -680,7 +805,8 @@
   }
 
   function subtotalItem(it) {
-    return (Number(it.costoEstimado) || 0) * it.cantidadSolicitada * (it.cantidadPeriodos || 1);
+    const multiplicadorCantidad = it.tipoCosto === 'Total' ? 1 : it.cantidadSolicitada;
+    return (Number(it.costoEstimado) || 0) * multiplicadorCantidad * (it.cantidadPeriodos || 1);
   }
 
   function montoPresupuestadoTotal() {
@@ -704,6 +830,8 @@
       const suscripcion = it.tipoSuscripcion ? ` <span class="muted">(${escapeHtml(it.tipoSuscripcion)} × ${it.cantidadPeriodos})</span>` : '';
       const totalFotos = it.fotografiasNuevas.length + it.fotografiasExistentes.length;
       const subtotal = subtotalItem(it);
+      const tipoCostoTag = ` <span class="muted">(${it.tipoCosto === 'Total' ? 'Total' : 'Unit.'})</span>`;
+      const cotizacionTag = (it.cotizacionTokenNuevo || it.cotizacionRutaExistente) ? ' 📎' : '';
       return `<tr>
         <td>${idx + 1}</td>
         <td>${escapeHtml(it.prioridadNombre)}</td>
@@ -711,9 +839,9 @@
         <td>${escapeHtml(elemento)}${detalle}${suscripcion}</td>
         <td>${escapeHtml(it.ubicacionEspecifica || '-')}</td>
         <td>${it.cantidadSolicitada}</td>
-        <td>${formatoMoneda(it.costoEstimado)}</td>
+        <td>${formatoMoneda(it.costoEstimado)}${tipoCostoTag}</td>
         <td>${formatoMoneda(subtotal)}</td>
-        <td>${totalFotos || '-'}</td>
+        <td>${totalFotos || '-'}${cotizacionTag}</td>
         <td>
           <button type="button" class="btn btn-outline btn-sm" data-accion="editar" data-idx="${idx}">Editar</button>
           <button type="button" class="btn btn-outline btn-sm" data-accion="eliminar" data-idx="${idx}" style="color:var(--dga-danger);">Eliminar</button>
@@ -765,7 +893,16 @@
       elementoLibre.value = it.elementoLibre || '';
     }
     document.getElementById('CantidadSolicitada').value = it.cantidadSolicitada;
-    document.getElementById('CostoEstimado').value = it.costoEstimado ?? 0;
+    tipoCostoSel.value = it.tipoCosto || 'Unitario';
+    document.getElementById('CostoEstimado').value = it.costoEstimado ?? '';
+    if (it.cotizacionTokenNuevo) {
+      cotizacionActual = { tipo: 'nueva', token: it.cotizacionTokenNuevo, nombre: it.cotizacionNombreOriginalNuevo || it.cotizacionTokenNuevo };
+    } else if (it.cotizacionRutaExistente) {
+      cotizacionActual = { tipo: 'existente', solicitudItemId: it.id, ruta: it.cotizacionRutaExistente, nombre: it.cotizacionNombreExistente || it.cotizacionRutaExistente.split('/').pop() };
+    } else {
+      cotizacionActual = null;
+    }
+    renderCotizacionChip();
     if (!wrapSuscripcion.hidden && it.tipoSuscripcion) {
       tipoSuscripcionSel.value = it.tipoSuscripcion;
       cantidadPeriodosInput.value = it.cantidadPeriodos ?? 1;

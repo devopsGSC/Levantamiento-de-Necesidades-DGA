@@ -107,6 +107,7 @@ public class AdminSolicitudesController(
             EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
             Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
             {
+                Id = i.Id,
                 NumeroItem = i.NumeroItem,
                 Componente = i.Componente.Nombre,
                 Subcomponente = i.Subcomponente.Nombre,
@@ -114,6 +115,8 @@ public class AdminSolicitudesController(
                 Detalle = i.Detalle?.Nombre,
                 CantidadSolicitada = i.CantidadSolicitada,
                 CostoEstimado = i.CostoEstimado,
+                TipoCosto = i.TipoCosto,
+                CotizacionNombreOriginal = i.CotizacionNombreOriginal,
                 TipoSuscripcion = i.TipoSuscripcion,
                 CantidadPeriodos = i.CantidadPeriodos,
                 Prioridad = i.PrioridadId switch { 1 => "Alta", 2 => "Media", _ => "Baja" },

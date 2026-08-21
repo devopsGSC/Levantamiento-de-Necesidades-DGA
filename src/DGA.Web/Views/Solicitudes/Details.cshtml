@@ -66,8 +66,12 @@
                         {
                             <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Suscripción</div>@item.TipoSuscripcion × @item.CantidadPeriodos @(item.TipoSuscripcion == "Anual" ? "año(s)" : "mes(es)")</div>
                         }
-                        <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Costo Estimado (@(string.IsNullOrWhiteSpace(item.TipoSuscripcion) ? "unitario" : "por período"))</div>@item.CostoEstimado.ToString("$#,##0.00")</div>
+                        <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Costo Estimado (@item.TipoCosto@(string.IsNullOrWhiteSpace(item.TipoSuscripcion) ? "" : ", por período"))</div>@item.CostoEstimado.ToString("$#,##0.00")</div>
                         <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Subtotal</div>@item.Subtotal.ToString("$#,##0.00")</div>
+                        @if (item.TieneCotizacion)
+                        {
+                            <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Cotización Adjunta</div><a href="@Url.Action("Cotizacion", "Solicitudes", new { solicitudItemId = item.Id })" target="_blank">@item.CotizacionNombreOriginal</a></div>
+                        }
                         <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Ubicación Específica</div>@(item.UbicacionEspecifica ?? "-")</div>
                         @if (!string.IsNullOrWhiteSpace(item.JustificacionItem))
                         {

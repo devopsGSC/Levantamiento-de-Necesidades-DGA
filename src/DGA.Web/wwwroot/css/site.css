@@ -652,6 +652,20 @@ textarea.form-control { min-height: 88px; resize: vertical; font-family: inherit
 .elemento-checklist__item[hidden] { display: none; }
 .elemento-checklist__vacio { padding: 12px; text-align: center; font-size: 13px; color: var(--dga-muted); }
 
+.cost-panel {
+  border: 1px solid var(--dga-border); border-radius: var(--dga-radius-sm);
+  background: var(--dga-muted-bg); padding: 16px 18px;
+}
+.cost-panel__title {
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600;
+  color: var(--dga-primary-dark); margin: 0 0 14px;
+}
+.cost-panel__grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 20px;
+}
+.cost-panel__block { margin-top: 16px; }
+.cost-panel .dropzone { background: var(--dga-surface); }
+
 .btn-link {
   background: none; border: none; padding: 0; margin-top: 6px;
   color: var(--dga-primary); font-size: 13px; cursor: pointer; text-decoration: underline;

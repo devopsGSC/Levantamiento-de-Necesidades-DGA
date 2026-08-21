@@ -11,10 +11,10 @@
             <h1 class="section-title" style="margin:0 0 6px;">Detalle de Solicitud #@Model.IdSolicitud</h1>
             <partial name="_EstadoBadge" model="@Model.Estado" />
         </div>
-        <div style="display:flex;gap:10px;">
-            <a asp-action="DescargarPdf" asp-route-id="@Model.Id" class="btn btn-outline">PDF</a>
-            <a asp-action="DescargarExcel" asp-route-id="@Model.Id" class="btn btn-outline">Excel</a>
-            <a asp-action="Index" class="btn btn-outline">Volver al listado</a>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a asp-action="DescargarPdf" asp-route-id="@Model.Id" class="btn btn-outline is-pdf"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /></svg> PDF</a>
+            <a asp-action="DescargarExcel" asp-route-id="@Model.Id" class="btn btn-outline is-excel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /></svg> Excel</a>
+            <a asp-action="Index" class="btn btn-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg> Volver al listado</a>
         </div>
     </div>
 
@@ -118,7 +118,7 @@
             </form>
             <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post" style="margin-top:10px;"
                   data-confirm="¿Eliminar esta solicitud? Esta acción no se puede deshacer." data-confirm-peligroso="true">
-                <button type="submit" class="btn btn-outline btn-block" style="color:var(--dga-danger);">Eliminar Solicitud</button>
+                <button type="submit" class="btn btn-outline btn-block is-danger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg> Eliminar Solicitud</button>
             </form>
         </div>
 

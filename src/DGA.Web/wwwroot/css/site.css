@@ -264,6 +264,34 @@ a:hover { color: var(--dga-accent-dark); text-decoration: underline; }
 .btn.disabled { opacity: .5; pointer-events: none; }
 a.btn { text-decoration: none; }
 
+/* ---------- Acciones de fila (listados de solicitudes) ---------- */
+/* Antes eran todos ".btn-outline btn-sm" iguales — un color e icono por tipo de
+   acción para poder distinguirlas de un vistazo (Ver/PDF/Excel/Editar/Descartar). */
+.row-actions { display: flex; gap: 6px; flex-wrap: nowrap; }
+.btn-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 10px;
+  border-radius: var(--dga-radius-sm);
+  border: 1px solid var(--dga-border);
+  background: var(--dga-surface);
+  color: var(--dga-muted);
+  font-size: 12.5px; font-weight: 600; font-family: inherit;
+  cursor: pointer; text-decoration: none;
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+.btn-action svg { width: 15px; height: 15px; flex-shrink: 0; }
+.btn-action:hover { background: var(--dga-muted-bg); color: var(--dga-ink); border-color: var(--dga-ink); text-decoration: none; }
+/* Estos mismos matices también se usan sobre ".btn-outline" de tamaño normal
+   (encabezado del Detalle de Solicitud), no solo sobre ".btn-action". */
+.btn-action.is-primary, .btn-outline.is-primary { color: var(--dga-primary); border-color: rgba(37,99,235,.3); }
+.btn-action.is-primary:hover, .btn-outline.is-primary:hover { background: var(--dga-primary-soft); color: var(--dga-primary-dark); border-color: var(--dga-primary); }
+.btn-action.is-pdf, .btn-outline.is-pdf { color: #B91C1C; border-color: rgba(220,38,38,.3); }
+.btn-action.is-pdf:hover, .btn-outline.is-pdf:hover { background: var(--dga-danger-soft); border-color: var(--dga-danger); color: var(--dga-danger); }
+.btn-action.is-excel, .btn-outline.is-excel { color: #15803D; border-color: rgba(21,128,61,.3); }
+.btn-action.is-excel:hover, .btn-outline.is-excel:hover { background: var(--dga-success-soft); border-color: var(--dga-success); color: var(--dga-success); }
+.btn-action.is-danger, .btn-outline.is-danger { color: var(--dga-danger); border-color: rgba(220,38,38,.3); }
+.btn-action.is-danger:hover, .btn-outline.is-danger:hover { background: var(--dga-danger-soft); border-color: var(--dga-danger); color: var(--dga-danger); }
+
 /* ---------- Indicadores de carga ---------- */
 
 .dga-spinner { width: 14px; height: 14px; flex-shrink: 0; animation: dga-spin .7s linear infinite; }

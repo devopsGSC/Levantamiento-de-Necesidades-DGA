@@ -20,10 +20,10 @@
         </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div class="detail-grid-2">
         <div class="card" style="padding:20px 22px;">
             <h3 style="margin:0 0 14px;font-size:15px;">Información General</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13.5px;">
+            <div class="detail-fields-grid">
                 <div><div class="muted" style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Responsable</div><div>@Model.NombreResponsable</div><div class="muted" style="color:var(--dga-muted);">@Model.Cargo</div></div>
                 <div><div class="muted" style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Aduana</div><div>@Model.Aduana</div><div class="muted" style="color:var(--dga-muted);">@Model.TipoAduana</div></div>
                 <div><div class="muted" style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Fecha de Registro</div><div>@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</div></div>
@@ -53,7 +53,7 @@
                         <strong>Ítem #@item.NumeroItem</strong>
                         <span class="status-badge">@item.Prioridad</span>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:13.5px;">
+                    <div class="item-fields-grid">
                         <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Componente</div>@item.Componente</div>
                         <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Subcomponente</div>@item.Subcomponente</div>
                         <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Elemento / Necesidad</div>@(item.Elemento ?? "-")</div>
@@ -109,8 +109,8 @@
             <div style="display:flex;flex-direction:column;gap:10px;">
                 @foreach (var h in Model.Historial)
                 {
-                    <div style="display:flex;gap:16px;font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
-                        <div style="min-width:130px;color:var(--dga-muted);">@h.FechaCambio.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="history-row">
+                        <div class="history-row__date">@h.FechaCambio.ToString("dd/MM/yyyy HH:mm")</div>
                         <div>
                             <partial name="_EstadoBadge" model="@(h.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@h.EstadoNuevo" />
                             @if (!string.IsNullOrWhiteSpace(h.Comentario))

@@ -87,6 +87,10 @@ a:hover { color: var(--dga-accent-dark); text-decoration: underline; }
   padding: 0 24px;
 }
 
+@media (max-width: 480px) {
+  .container-page { padding: 0 14px; }
+}
+
 /* ---------- Header ---------- */
 
 .dga-header {
@@ -224,6 +228,12 @@ a:hover { color: var(--dga-accent-dark); text-decoration: underline; }
   .dga-nav { display: none; }
   .dga-header__right-desktop { display: none; }
   .dga-mobile-btn { display: flex; }
+}
+
+@media (max-width: 480px) {
+  .dga-header__bar { padding: 12px 14px; }
+  .dga-breadcrumbs__inner { padding: 0 14px; }
+  .dga-brand__subtitle { font-size: 11px; }
 }
 
 /* ---------- Buttons ---------- */
@@ -459,6 +469,11 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
   background: rgba(241,245,249,.3);
 }
 
+@media (max-width: 480px) {
+  .auth-page { padding: 14px; }
+  .auth-card__header, .auth-card__body, .auth-card__footer { padding-left: 20px; padding-right: 20px; }
+}
+
 /* ---------- Forms ---------- */
 
 .form-group { margin-bottom: 18px; }
@@ -618,6 +633,13 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 480px) {
+  .hero-cards__row { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 28px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
 /* ---------- Formulario de Solicitud ---------- */
 
 .form-section {
@@ -635,12 +657,33 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
 .form-grid .span-2 { grid-column: 1 / -1; }
 textarea.form-control { min-height: 88px; resize: vertical; font-family: inherit; }
 
+/* ---------- Grids de 2 columnas reutilizables (vistas de detalle) ---------- */
+.detail-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.detail-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 13.5px; }
+.item-fields-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13.5px; }
+.item-fields-grid .span-2 { grid-column: 1 / -1; }
+
+.history-row { display: flex; gap: 16px; font-size: 13px; border-bottom: 1px solid var(--dga-border); padding-bottom: 10px; }
+.history-row__date { min-width: 130px; color: var(--dga-muted); }
+
+@media (max-width: 640px) {
+  .form-grid, .cost-panel__grid, .detail-grid-2, .detail-fields-grid, .item-fields-grid {
+    grid-template-columns: 1fr;
+  }
+  .history-row { flex-direction: column; gap: 4px; }
+  .history-row__date { min-width: 0; }
+}
+
 .elemento-checklist {
   max-height: 220px; overflow-y: auto;
   border: 1px solid var(--dga-border); border-radius: var(--dga-radius-sm);
   padding: 4px;
   background: var(--dga-surface);
   display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px;
+}
+
+@media (max-width: 400px) {
+  .elemento-checklist { grid-template-columns: 1fr; }
 }
 .elemento-checklist__item {
   display: flex; align-items: center; gap: 8px;
@@ -741,8 +784,14 @@ table.item-table .muted { color: var(--dga-muted); }
   position: sticky; bottom: 0;
   background: var(--dga-surface); border-top: 1px solid var(--dga-border);
   padding: 14px 24px; margin-top: 8px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   box-shadow: 0 -2px 8px rgba(16,24,40,.04);
+}
+
+@media (max-width: 560px) {
+  .sticky-actions { flex-direction: column; align-items: stretch; padding: 14px 16px; }
+  .sticky-actions > a.btn, .sticky-actions > div { width: 100%; }
+  .sticky-actions > div > .btn { flex: 1; }
 }
 
 .modal-overlay {
@@ -766,7 +815,12 @@ table.item-table .muted { color: var(--dga-muted); }
 .modal-icon.is-peligroso { background: var(--dga-danger-soft); color: var(--dga-danger); }
 .modal-icon.is-normal { background: var(--dga-primary-soft); color: var(--dga-primary-dark); }
 .modal-box__body { padding: 20px 24px; }
-.modal-box__footer { padding: 16px 24px 22px; display: flex; justify-content: flex-end; gap: 10px; }
+.modal-box__footer { padding: 16px 24px 22px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 480px) {
+  .modal-box__header, .modal-box__body, .modal-box__footer { padding-left: 18px; padding-right: 18px; }
+  .modal-box__footer .btn { flex: 1; min-width: 120px; }
+}
 .summary-row { display: flex; justify-content: space-between; font-size: 13.5px; padding: 6px 0; border-bottom: 1px dashed var(--dga-border); }
 .summary-row:last-child { border-bottom: none; }
 .confirm-checkbox { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: 13.5px; }
@@ -785,6 +839,12 @@ table.item-table .muted { color: var(--dga-muted); }
 .admin-tab {
   padding: 10px 16px; font-size: 13.5px; font-weight: 600; color: var(--dga-muted);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .admin-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .admin-tab { padding: 10px 12px; }
 }
 .admin-tab:hover { color: var(--dga-ink); text-decoration: none; }
 .admin-tab.active { color: var(--dga-primary); border-bottom-color: var(--dga-primary); }
@@ -897,4 +957,19 @@ table.data-table tr:last-child td { border-bottom: none; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-row, .dash-row.even { grid-template-columns: 1fr; }
   .range-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .range-grid { grid-template-columns: 1fr; }
+  .filters-bar .field { min-width: 0; width: 100%; }
+}
+
+/* ---------- Red de seguridad responsive ----------
+   Muchas filas de acciones en las vistas (catálogos, listados) usan
+   "display:flex" en línea sin flex-wrap. En vez de reescribir cada vista,
+   se fuerza el wrap en pantallas chicas: si el contenido ya entra en una
+   línea no cambia nada, y si no entra, apila en vez de recortarse. */
+@media (max-width: 640px) {
+  [style*="display:flex"] { flex-wrap: wrap; }
 }

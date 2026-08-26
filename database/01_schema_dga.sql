@@ -624,18 +624,12 @@ CREATE TABLE dbo.EstadosSolicitud (
 GO
 
 INSERT INTO dbo.EstadosSolicitud (Id, Nombre, Orden, EsInicial, EsFinal) VALUES
-(1,  N'Guardado Borrador', 1,  1, 0),
-(2,  N'Solicitado',        2,  0, 0),
-(3,  N'Pendiente',         3,  0, 0),
-(4,  N'Aprobado',          4,  0, 0),
-(5,  N'Denegado',          5,  0, 1),
-(6,  N'Comprado',          6,  0, 0),
-(7,  N'Realizado',         7,  0, 0),
-(8,  N'En Proceso',        8,  0, 0),
-(9,  N'Rechazado',         9,  0, 1),
-(10, N'Observado',         10, 0, 0),
-(11, N'Cotizado',          11, 0, 0),
-(12, N'Finalizado',        12, 0, 1);
+(1,  N'Guardado Borrador', 1, 1, 0),
+(2,  N'Solicitado',        2, 0, 0),
+(8,  N'En Proceso',        3, 0, 0),
+(4,  N'Aprobado',          4, 0, 0),
+(5,  N'Denegado',          5, 0, 1),
+(12, N'Finalizado',        6, 0, 1);
 GO
 
 /* =====================================================================================

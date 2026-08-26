@@ -8,16 +8,13 @@ using QuestPDF.Infrastructure;
 
 namespace DGA.Web.Services;
 
-public class SolicitudExportService(ApplicationDbContext db, FileStorageService archivos, IWebHostEnvironment env)
+public class SolicitudExportService(ApplicationDbContext db, FileStorageService archivos)
 {
-    /// <summary>Versión gris clara del logo (mismo trazo, recoloreado) para usar como marca de
-    /// agua discreta en el PDF — la original es blanca y quedaría invisible sobre la hoja.</summary>
-    private string RutaLogoMarcaAgua => Path.Combine(env.WebRootPath, "images", "logo-gcs-marca-agua.png");
-
     private static string FormatoMoneda(decimal monto) => monto.ToString("$#,##0.00", System.Globalization.CultureInfo.InvariantCulture);
 
-    private static decimal Subtotal(SolicitudItem item) =>
-        item.CostoEstimado * (item.TipoCosto == "Total" ? 1 : item.CantidadSolicitada) * (item.CantidadPeriodos ?? 1);
+    private static decimal Subtotal(SolicitudItem item) => !item.TienePresupuesto
+        ? 0
+        : item.CostoEstimado * (item.TipoCosto == "Total" ? 1 : item.CantidadSolicitada) * (item.CantidadPeriodos ?? 1);
 
     /// <summary>Texto de la columna Detalle — para ítems de suscripción (Internet,
     /// Telefonía) muestra el Tipo/Cantidad de Períodos en vez de "-" cuando el ítem no
@@ -38,6 +35,7 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
             .Include(s => s.Usuario)
             .Include(s => s.Aduana).ThenInclude(a => a.TipoAduana)
             .Include(s => s.Cargo)
+            .Include(s => s.UnidadEjecutora)
             .Include(s => s.Estado)
             .Include(s => s.Items).ThenInclude(i => i.Componente)
             .Include(s => s.Items).ThenInclude(i => i.Subcomponente)
@@ -65,19 +63,13 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
 
                     col.Item().Column(titulo =>
                     {
-                        if (File.Exists(RutaLogoMarcaAgua))
-                        {
-                            titulo.Item().AlignCenter().Height(26).Image(RutaLogoMarcaAgua).FitHeight();
-                            titulo.Item().PaddingTop(4);
-                        }
-                        titulo.Item().AlignCenter().Text("GLOBAL CUSTOMS SOLUTIONS").FontSize(18).Bold();
-                        titulo.Item().AlignCenter().PaddingTop(2).Text("ORDEN DE SOLICITUD FORMAL").FontSize(11.5f).FontColor(Colors.Grey.Darken2).LetterSpacing(0.05f);
+                        titulo.Item().AlignCenter().Text("ORDEN DE SOLICITUD FORMAL").FontSize(18).Bold();
                     });
 
                     col.Item().Border(1).BorderColor(Colors.Grey.Lighten1).Padding(10).Row(fila =>
                     {
                         fila.RelativeItem().Text(t => { t.Span("NO. DE SOLICITUD: ").Bold(); t.Span(s.IdSolicitud); });
-                        fila.RelativeItem().AlignRight().Text(t => { t.Span("FECHA DE EMISIÓN: ").Bold(); t.Span(s.FechaRegistro.ToString("dd/MM/yyyy HH:mm:ss")); });
+                        fila.RelativeItem().AlignRight().Text(t => { t.Span("FECHA DE EMISIÓN: ").Bold(); t.Span(s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy HH:mm:ss")); });
                     });
                     col.Item().LineHorizontal(2).LineColor(Colors.Grey.Darken2);
 
@@ -102,6 +94,9 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
                             Celda(tabla.Cell()).Text(s.NombreResponsable);
                             Celda(tabla.Cell()).Text("Cargo:").SemiBold();
                             Celda(tabla.Cell()).Text(s.Cargo?.Nombre ?? "-");
+
+                            Celda(tabla.Cell()).Text("Unidad Ejecutora:").SemiBold();
+                            Celda(tabla.Cell().ColumnSpan(3)).Text(s.UnidadEjecutora?.Nombre ?? "-");
 
                             Celda(tabla.Cell()).Text("Aduana:").SemiBold();
                             Celda(tabla.Cell().ColumnSpan(3)).Text($"{s.Aduana.TipoAduana.Nombre} - {s.Aduana.Codigo} - {s.Aduana.Nombre}");
@@ -147,7 +142,7 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
                                 CeldaItem(tabla.Cell()).Text(item.Elemento?.Nombre ?? item.ElementoLibre ?? "-").FontSize(8.5f);
                                 CeldaItem(tabla.Cell()).Text(DetalleTexto(item)).FontSize(8.5f);
                                 CeldaItem(tabla.Cell()).AlignCenter().Text(item.CantidadSolicitada.ToString()).SemiBold();
-                                CeldaItem(tabla.Cell()).AlignRight().Text($"{FormatoMoneda(item.CostoEstimado)} ({(item.TipoCosto == "Total" ? "Tot." : "Unit.")})").FontSize(7.5f);
+                                CeldaItem(tabla.Cell()).AlignRight().Text(item.TienePresupuesto ? $"{FormatoMoneda(item.CostoEstimado)} ({(item.TipoCosto == "Total" ? "Tot." : "Unit.")})" : "Sin presupuesto").FontSize(7.5f);
                                 CeldaItem(tabla.Cell()).AlignRight().Text(FormatoMoneda(Subtotal(item))).FontSize(8f).SemiBold();
                                 CeldaItem(tabla.Cell()).AlignCenter().Text(item.CotizacionRuta is null ? "-" : "Sí").FontSize(8.5f);
                             }
@@ -230,10 +225,10 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
                     col.Item().PaddingTop(14).AlignCenter().Text(t =>
                     {
                         t.DefaultTextStyle(x => x.FontSize(7.5f).FontColor(Colors.Grey.Darken1).Italic());
-                        t.Span("Documento generado por el Sistema de Levantamiento de Necesidades — Global Customs Solutions | Solicitud: ");
+                        t.Span("Documento generado por el Sistema de Levantamiento de Necesidades | Solicitud: ");
                         t.Span(s.IdSolicitud);
                         t.Span(" | Fecha de Impresión: ");
-                        t.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"));
+                        t.Span(DateTime.UtcNow.ASalvador().ToString("dd/MM/yyyy HH:mm:ss"));
                     });
                 });
             });
@@ -253,9 +248,10 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
             ("Estado", s.Estado.Nombre),
             ("Responsable", s.NombreResponsable),
             ("Cargo", s.Cargo?.Nombre ?? "-"),
+            ("Unidad Ejecutora", s.UnidadEjecutora?.Nombre ?? "-"),
             ("Tipo de Aduana", s.Aduana.TipoAduana.Nombre),
             ("Aduana", $"{s.Aduana.Codigo} - {s.Aduana.Nombre}"),
-            ("Fecha de Registro", s.FechaRegistro.ToString("dd/MM/yyyy HH:mm")),
+            ("Fecha de Registro", s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy HH:mm")),
             ("Justificación General", s.JustificacionGeneral),
             ("Observaciones Generales", s.ObservacionesGenerales ?? "-"),
             ("Monto Presupuestado Total", FormatoMoneda(s.Items.Sum(Subtotal))),
@@ -287,9 +283,17 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
             hojaItems.Cell(fila2, 4).Value = item.Elemento?.Nombre ?? item.ElementoLibre ?? "-";
             hojaItems.Cell(fila2, 5).Value = DetalleTexto(item);
             hojaItems.Cell(fila2, 6).Value = item.CantidadSolicitada;
-            hojaItems.Cell(fila2, 7).Value = item.CostoEstimado;
-            hojaItems.Cell(fila2, 7).Style.NumberFormat.Format = "$#,##0.00";
-            hojaItems.Cell(fila2, 8).Value = item.TipoCosto;
+            if (item.TienePresupuesto)
+            {
+                hojaItems.Cell(fila2, 7).Value = item.CostoEstimado;
+                hojaItems.Cell(fila2, 7).Style.NumberFormat.Format = "$#,##0.00";
+                hojaItems.Cell(fila2, 8).Value = item.TipoCosto;
+            }
+            else
+            {
+                hojaItems.Cell(fila2, 7).Value = "Sin presupuesto";
+                hojaItems.Cell(fila2, 8).Value = "-";
+            }
             hojaItems.Cell(fila2, 9).Value = Subtotal(item);
             hojaItems.Cell(fila2, 9).Style.NumberFormat.Format = "$#,##0.00";
             hojaItems.Cell(fila2, 10).Value = item.CotizacionNombreOriginal ?? "-";

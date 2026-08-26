@@ -74,7 +74,7 @@
                                 <td>@(u.Subdireccion ?? "-")</td>
                                 <td>@(u.Departamento ?? "-")</td>
                                 <td><span class="status-badge @(u.Activo ? "is-success" : "is-danger")">@(u.Activo ? "Activo" : "Inactivo")</span></td>
-                                <td>@u.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>@u.CreatedAt.ASalvador().ToString("dd/MM/yyyy")</td>
                                 <td>
                                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                                         <button type="button" class="btn btn-outline btn-sm"

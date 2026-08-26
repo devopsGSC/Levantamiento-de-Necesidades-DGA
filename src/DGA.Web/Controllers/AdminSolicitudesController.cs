@@ -74,6 +74,7 @@ public class AdminSolicitudesController(
         var solicitud = await db.Solicitudes
             .Include(s => s.Aduana).ThenInclude(a => a.TipoAduana)
             .Include(s => s.Cargo)
+            .Include(s => s.UnidadEjecutora)
             .Include(s => s.Estado)
             .Include(s => s.Items).ThenInclude(i => i.Componente)
             .Include(s => s.Items).ThenInclude(i => i.Subcomponente)
@@ -97,6 +98,7 @@ public class AdminSolicitudesController(
             Estado = solicitud.Estado.Nombre,
             NombreResponsable = solicitud.NombreResponsable,
             Cargo = solicitud.Cargo?.Nombre,
+            UnidadEjecutora = solicitud.UnidadEjecutora?.Nombre,
             Aduana = $"{solicitud.Aduana.Codigo} - {solicitud.Aduana.Nombre}",
             TipoAduana = solicitud.Aduana.TipoAduana.Nombre,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -114,6 +116,7 @@ public class AdminSolicitudesController(
                 Elemento = i.Elemento?.Nombre ?? i.ElementoLibre,
                 Detalle = i.Detalle?.Nombre,
                 CantidadSolicitada = i.CantidadSolicitada,
+                TienePresupuesto = i.TienePresupuesto,
                 CostoEstimado = i.CostoEstimado,
                 TipoCosto = i.TipoCosto,
                 CotizacionNombreOriginal = i.CotizacionNombreOriginal,
@@ -148,7 +151,7 @@ public class AdminSolicitudesController(
 
         var estadoAnterior = solicitud.EstadoId;
         solicitud.EstadoId = model.NuevoEstadoId;
-        solicitud.Progreso = model.Progreso;
+        solicitud.Progreso = Estados.ProgresoParaEstado(model.NuevoEstadoId);
         solicitud.AdminRevisorId = UsuarioIdActual;
         solicitud.FechaRevision = DateTime.UtcNow;
         solicitud.UpdatedAt = DateTime.UtcNow;

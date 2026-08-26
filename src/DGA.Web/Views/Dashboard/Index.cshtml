@@ -23,7 +23,7 @@
         </div>
         @if (Model.UltimaSolicitudFecha.HasValue)
         {
-            <span class="dashboard-meta">Última solicitud: @Model.UltimaSolicitudFecha.Value.ToString("dd/MM/yyyy HH:mm")</span>
+            <span class="dashboard-meta">Última solicitud: @Model.UltimaSolicitudFecha.Value.ASalvador().ToString("dd/MM/yyyy HH:mm")</span>
         }
     </div>
 
@@ -71,9 +71,9 @@
             <div class="kpi-card__label">Pendientes</div>
         </div>
         <div class="card kpi-card">
-            <div class="kpi-card__top"><span class="kpi-card__pct" style="color:var(--dga-danger);">@Model.Pct(Model.RechazadasODenegadas)%</span></div>
-            <div class="kpi-card__value">@Model.RechazadasODenegadas</div>
-            <div class="kpi-card__label">Rechazadas / Denegadas</div>
+            <div class="kpi-card__top"><span class="kpi-card__pct" style="color:var(--dga-danger);">@Model.Pct(Model.Denegadas)%</span></div>
+            <div class="kpi-card__value">@Model.Denegadas</div>
+            <div class="kpi-card__label">Denegadas</div>
         </div>
         <div class="card kpi-card">
             <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.PrioridadAlta)%</span></div>
@@ -204,10 +204,17 @@
                                 <td>@s.Prioridad</td>
                                 <td><partial name="_EstadoBadge" model="@s.Estado" /></td>
                                 <td>
-                                    <div class="progress-track" style="width:80px;"><span style="width:@(s.Progreso)%;"></span></div>
-                                    <span style="font-size:11.5px;color:var(--dga-muted);">@s.Progreso%</span>
+                                    @if (s.Estado == "Denegado")
+                                    {
+                                        <span style="font-size:11.5px;color:var(--dga-muted);">No aplica</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="progress-track" style="width:80px;"><span style="width:@(s.Progreso)%;"></span></div>
+                                        <span style="font-size:11.5px;color:var(--dga-muted);">@s.Progreso%</span>
+                                    }
                                 </td>
-                                <td>@s.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                <td>@s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy")</td>
                             </tr>
                         }
                     }

@@ -45,7 +45,7 @@ public class AdminReportesController(
         // Corte manual: desde el lunes de la semana actual hasta hoy (no espera a que
         // termine la semana) — pensado para pedir un corte fuera del ciclo automático
         // de los domingos.
-        var hoy = DateOnly.FromDateTime(DateTime.Now);
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow.ASalvador());
         var diasDesdeElLunes = ((int)hoy.DayOfWeek + 6) % 7; // DayOfWeek: Lunes = 1 ... Domingo = 0
         var inicioSemana = hoy.AddDays(-diasDesdeElLunes);
 

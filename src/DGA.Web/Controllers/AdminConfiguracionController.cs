@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DGA.Web.Controllers;
 
 /// <summary>Panel de Configuración: datos de contacto y los catálogos "simples" (Cargos,
-/// Prioridades, Tipos de Aduana) que no tienen otra tabla relacionada. Los catálogos con
+/// Unidades Ejecutoras, Prioridades, Tipos de Aduana) que no tienen otra tabla relacionada. Los catálogos con
 /// jerarquía (Aduanas, Componentes→Detalles) tienen sus propios controladores —
 /// ver AdminCatalogoAduanasController y AdminCatalogoComponentesController.</summary>
 [Authorize(Roles = Roles.Administrador)]
@@ -27,6 +27,9 @@ public class AdminConfiguracionController(ApplicationDbContext db) : Controller
             SoporteHorario = config?.SoporteHorario ?? string.Empty,
             Cargos = await db.Cargos.OrderBy(c => c.Orden)
                 .Select(c => new CatalogoSimpleItemViewModel { Id = c.Id, Nombre = c.Nombre, Orden = c.Orden, Activo = c.Activo })
+                .ToListAsync(),
+            UnidadesEjecutoras = await db.UnidadesEjecutoras.OrderBy(u => u.Orden)
+                .Select(u => new CatalogoSimpleItemViewModel { Id = u.Id, Nombre = u.Nombre, Orden = u.Orden, Activo = u.Activo })
                 .ToListAsync(),
             Prioridades = await db.Prioridades.OrderBy(p => p.Orden)
                 .Select(p => new CatalogoSimpleItemViewModel { Id = p.Id, Nombre = p.Nombre, Orden = p.Orden, Activo = p.Activo })
@@ -96,6 +99,46 @@ public class AdminConfiguracionController(ApplicationDbContext db) : Controller
         cargo.Activo = activo;
         await db.SaveChangesAsync();
         TempData["Mensaje"] = activo ? "Cargo reactivado." : "Cargo desactivado — deja de ofrecerse en solicitudes nuevas.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // ------------------------------------------------------------------
+    // Unidades Ejecutoras
+    // ------------------------------------------------------------------
+
+    [HttpPost("UnidadesEjecutoras/Crear")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CrearUnidadEjecutora(string nombre)
+    {
+        var siguienteId = (byte)((await db.UnidadesEjecutoras.MaxAsync(u => (byte?)u.Id)) is { } max ? max + 1 : 1);
+        var siguienteOrden = (short)((await db.UnidadesEjecutoras.MaxAsync(u => (short?)u.Orden)) is { } maxOrden ? maxOrden + 1 : 1);
+        db.UnidadesEjecutoras.Add(new UnidadEjecutora { Id = siguienteId, Nombre = nombre, Orden = siguienteOrden, Activo = true });
+        await db.SaveChangesAsync();
+        TempData["Mensaje"] = $"Unidad Ejecutora \"{nombre}\" agregada.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("UnidadesEjecutoras/{id:int}/Editar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditarUnidadEjecutora(byte id, string nombre)
+    {
+        var unidad = await db.UnidadesEjecutoras.FindAsync(id);
+        if (unidad is null) return NotFound();
+        unidad.Nombre = nombre;
+        await db.SaveChangesAsync();
+        TempData["Mensaje"] = "Unidad Ejecutora actualizada.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("UnidadesEjecutoras/{id:int}/Activo")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivarUnidadEjecutora(byte id, bool activo)
+    {
+        var unidad = await db.UnidadesEjecutoras.FindAsync(id);
+        if (unidad is null) return NotFound();
+        unidad.Activo = activo;
+        await db.SaveChangesAsync();
+        TempData["Mensaje"] = activo ? "Unidad Ejecutora reactivada." : "Unidad Ejecutora desactivada — deja de ofrecerse en solicitudes nuevas.";
         return RedirectToAction(nameof(Index));
     }
 

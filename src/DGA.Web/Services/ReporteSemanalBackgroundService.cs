@@ -1,3 +1,5 @@
+using DGA.Web.Data;
+
 namespace DGA.Web.Services;
 
 /// <summary>
@@ -39,7 +41,7 @@ public class ReporteSemanalBackgroundService(
 
     private async Task GenerarSiFaltaAsync()
     {
-        var hoy = DateOnly.FromDateTime(DateTime.Now);
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow.ASalvador());
         var diasDesdeElDomingo = (int)hoy.DayOfWeek; // DayOfWeek: Domingo = 0 ... Sábado = 6
         var ultimoDomingo = hoy.AddDays(-diasDesdeElDomingo);
         var inicioSemana = ultimoDomingo.AddDays(-6);

@@ -28,6 +28,7 @@ public class AdminConfiguracionIndexViewModel
     public string SoporteHorario { get; set; } = string.Empty;
 
     public List<CatalogoSimpleItemViewModel> Cargos { get; set; } = new();
+    public List<CatalogoSimpleItemViewModel> UnidadesEjecutoras { get; set; } = new();
     public List<CatalogoSimpleItemViewModel> Prioridades { get; set; } = new();
     public List<CatalogoSimpleItemViewModel> TiposAduana { get; set; } = new();
 }

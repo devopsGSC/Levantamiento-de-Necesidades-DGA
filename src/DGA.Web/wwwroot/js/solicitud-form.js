@@ -23,6 +23,7 @@
       detalleId: i.detalleId ?? null,
       detalleNombre: i.detalleNombre ?? null,
       cantidadSolicitada: i.cantidadSolicitada,
+      tienePresupuesto: i.tienePresupuesto ?? false,
       costoEstimado: i.costoEstimado ?? 0,
       tipoCosto: i.tipoCosto || 'Unitario',
       cotizacionRutaExistente: i.cotizacionRutaExistente ?? null,
@@ -106,18 +107,32 @@
   const CAMPOS_OBLIGATORIOS_GENERAL = [
     { nombre: 'NombreResponsable', etiqueta: 'Nombre Solicitante' },
     { nombre: 'CargoId', etiqueta: 'Cargo' },
+    { nombre: 'UnidadEjecutoraId', etiqueta: 'Unidad Ejecutora' },
     { nombre: 'TipoAduanaId', etiqueta: 'Tipo de Aduana' },
     { nombre: 'AduanaId', etiqueta: 'Nombre de Aduana' },
     { nombre: 'JustificacionGeneral', etiqueta: 'Justificación General' },
   ];
   CAMPOS_OBLIGATORIOS_GENERAL.forEach((campo) => {
-    limpiarInvalidoAlEditar(document.querySelector('[name="' + campo.nombre + '"]'));
+    // Un campo con más de un elemento del mismo name es un grupo de radios (ej. Unidad
+    // Ejecutora, estilo checklist): el resaltado de error se aplica sobre el contenedor
+    // `.elemento-checklist`, no sobre cada radio suelto (ver `_comboInput`, usado también
+    // por combo-buscable.js para redirigir el estilo de un input real a su reemplazo visible).
+    const elementos = Array.from(document.querySelectorAll('[name="' + campo.nombre + '"]'));
+    const contenedor = elementos.length > 1 ? elementos[0].closest('.elemento-checklist') : null;
+    elementos.forEach((el) => {
+      if (contenedor) el._comboInput = contenedor;
+      limpiarInvalidoAlEditar(el);
+    });
   });
 
   function validarInformacionGeneral() {
     for (const campo of CAMPOS_OBLIGATORIOS_GENERAL) {
       const el = document.querySelector('[name="' + campo.nombre + '"]');
-      if (el && !el.value) {
+      if (!el) continue;
+      const vacio = el.type === 'radio'
+        ? !document.querySelector('input[name="' + campo.nombre + '"]:checked')
+        : !el.value;
+      if (vacio) {
         marcarInvalido(el, 'Completá "' + campo.etiqueta + '" antes de confirmar los datos.');
         return false;
       }
@@ -200,6 +215,22 @@
   const tipoCostoSel = document.getElementById('TipoCosto');
   limpiarInvalidoAlEditar(tipoCostoSel);
   limpiarInvalidoAlEditar(document.getElementById('CostoEstimado'));
+
+  // ---------------------------------------------------------------
+  // ¿Tiene monto presupuestado? — el Costo/Tipo de Costo/Cotización son opcionales;
+  // por defecto el ítem no tiene presupuesto y toda esa sección queda oculta.
+  // ---------------------------------------------------------------
+
+  const wrapCosto = document.getElementById('wrap-costo');
+  const tienePresupuestoRadios = Array.from(document.querySelectorAll('input[name="tiene-presupuesto"]'));
+
+  function tienePresupuesto() {
+    return document.querySelector('input[name="tiene-presupuesto"]:checked')?.value === 'si';
+  }
+
+  tienePresupuestoRadios.forEach((r) => r.addEventListener('change', () => {
+    wrapCosto.hidden = !tienePresupuesto();
+  }));
 
   function actualizarEtiquetaPeriodos() {
     labelCantidadPeriodos.textContent = tipoSuscripcionSel.value === 'Anual' ? 'Cantidad de Años' : 'Cantidad de Meses';
@@ -700,12 +731,13 @@
       subcomponenteNombre: subcomponenteSel.selectedOptions[0].textContent,
       ...camposElemento,
       cantidadSolicitada: Number(document.getElementById('CantidadSolicitada').value) || 1,
-      costoEstimado: Number(document.getElementById('CostoEstimado').value) || 0,
-      tipoCosto: tipoCostoSel.value,
-      cotizacionTokenNuevo: cotizacionActual && cotizacionActual.tipo === 'nueva' ? cotizacionActual.token : null,
-      cotizacionNombreOriginalNuevo: cotizacionActual && cotizacionActual.tipo === 'nueva' ? cotizacionActual.nombre : null,
-      cotizacionRutaExistente: cotizacionActual && cotizacionActual.tipo === 'existente' ? cotizacionActual.ruta : null,
-      cotizacionNombreExistente: cotizacionActual && cotizacionActual.tipo === 'existente' ? cotizacionActual.nombre : null,
+      tienePresupuesto: tienePresupuesto(),
+      costoEstimado: tienePresupuesto() ? (Number(document.getElementById('CostoEstimado').value) || 0) : 0,
+      tipoCosto: tienePresupuesto() ? tipoCostoSel.value : 'Unitario',
+      cotizacionTokenNuevo: tienePresupuesto() && cotizacionActual && cotizacionActual.tipo === 'nueva' ? cotizacionActual.token : null,
+      cotizacionNombreOriginalNuevo: tienePresupuesto() && cotizacionActual && cotizacionActual.tipo === 'nueva' ? cotizacionActual.nombre : null,
+      cotizacionRutaExistente: tienePresupuesto() && cotizacionActual && cotizacionActual.tipo === 'existente' ? cotizacionActual.ruta : null,
+      cotizacionNombreExistente: tienePresupuesto() && cotizacionActual && cotizacionActual.tipo === 'existente' ? cotizacionActual.nombre : null,
       tipoSuscripcion: wrapSuscripcion.hidden ? null : tipoSuscripcionSel.value,
       cantidadPeriodos: wrapSuscripcion.hidden ? null : (Number(cantidadPeriodosInput.value) || 1),
       prioridadId: Number(document.getElementById('PrioridadId').value),
@@ -762,14 +794,16 @@
       };
     }
 
-    if (!tipoCostoSel.value) {
-      marcarInvalido(tipoCostoSel, 'Seleccioná si el Costo Estimado es Unitario o Total.');
-      return;
-    }
-    const costoEstimadoEl = document.getElementById('CostoEstimado');
-    if (!(Number(costoEstimadoEl.value) > 0)) {
-      marcarInvalido(costoEstimadoEl, 'Ingresá el Costo Estimado.');
-      return;
+    if (tienePresupuesto()) {
+      if (!tipoCostoSel.value) {
+        marcarInvalido(tipoCostoSel, 'Seleccioná si el Costo Estimado es Unitario o Total.');
+        return;
+      }
+      const costoEstimadoEl = document.getElementById('CostoEstimado');
+      if (!(Number(costoEstimadoEl.value) > 0)) {
+        marcarInvalido(costoEstimadoEl, 'Ingresá el Costo Estimado.');
+        return;
+      }
     }
 
     const eraEdicion = indiceEnEdicion !== null;
@@ -794,6 +828,8 @@
     subcomponenteSel.disabled = true;
     resetElementoYDetalle();
     document.getElementById('CantidadSolicitada').value = 1;
+    tienePresupuestoRadios.forEach((r) => (r.checked = r.value === 'no'));
+    wrapCosto.hidden = true;
     tipoCostoSel.value = '';
     document.getElementById('CostoEstimado').value = '';
     cotizacionActual = null;
@@ -839,7 +875,7 @@
         <td>${escapeHtml(elemento)}${detalle}${suscripcion}</td>
         <td>${escapeHtml(it.ubicacionEspecifica || '-')}</td>
         <td>${it.cantidadSolicitada}</td>
-        <td>${formatoMoneda(it.costoEstimado)}${tipoCostoTag}</td>
+        <td>${it.tienePresupuesto ? formatoMoneda(it.costoEstimado) + tipoCostoTag : '<span class="muted">Sin presupuesto</span>'}</td>
         <td>${formatoMoneda(subtotal)}</td>
         <td>${totalFotos || '-'}${cotizacionTag}</td>
         <td>
@@ -893,6 +929,8 @@
       elementoLibre.value = it.elementoLibre || '';
     }
     document.getElementById('CantidadSolicitada').value = it.cantidadSolicitada;
+    tienePresupuestoRadios.forEach((r) => (r.checked = r.value === (it.tienePresupuesto ? 'si' : 'no')));
+    wrapCosto.hidden = !it.tienePresupuesto;
     tipoCostoSel.value = it.tipoCosto || 'Unitario';
     document.getElementById('CostoEstimado').value = it.costoEstimado ?? '';
     if (it.cotizacionTokenNuevo) {

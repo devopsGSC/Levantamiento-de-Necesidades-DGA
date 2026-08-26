@@ -10,6 +10,7 @@ public class Solicitud
     public int UsuarioId { get; set; }
     public string NombreResponsable { get; set; } = string.Empty;
     public byte CargoId { get; set; }
+    public byte UnidadEjecutoraId { get; set; }
     public int AduanaId { get; set; }
     public string JustificacionGeneral { get; set; } = string.Empty;
     public string? ObservacionesGenerales { get; set; }
@@ -30,6 +31,7 @@ public class Solicitud
     public ApplicationUser Usuario { get; set; } = null!;
     public ApplicationUser? AdminRevisor { get; set; }
     public Cargo Cargo { get; set; } = null!;
+    public UnidadEjecutora UnidadEjecutora { get; set; } = null!;
     public Aduana Aduana { get; set; } = null!;
     public EstadoSolicitud Estado { get; set; } = null!;
 

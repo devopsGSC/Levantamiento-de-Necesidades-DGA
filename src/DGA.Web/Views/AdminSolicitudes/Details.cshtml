@@ -23,11 +23,12 @@
             <h3 style="margin:0 0 14px;font-size:15px;">Información General</h3>
             <div class="detail-fields-grid">
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Responsable</div><div>@Model.NombreResponsable</div><div style="color:var(--dga-muted);">@Model.Cargo</div></div>
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Unidad Ejecutora</div><div>@Model.UnidadEjecutora</div></div>
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Aduana</div><div>@Model.Aduana</div><div style="color:var(--dga-muted);">@Model.TipoAduana</div></div>
-                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Fecha de Registro</div><div>@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</div></div>
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Fecha de Registro</div><div>@Model.FechaRegistro.ASalvador().ToString("dd/MM/yyyy HH:mm")</div></div>
                 @if (Model.FechaRevision.HasValue)
                 {
-                    <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Última Revisión</div><div>@Model.FechaRevision.Value.ToString("dd/MM/yyyy HH:mm")</div></div>
+                    <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Última Revisión</div><div>@Model.FechaRevision.Value.ASalvador().ToString("dd/MM/yyyy HH:mm")</div></div>
                 }
             </div>
         </div>
@@ -68,8 +69,15 @@
                         {
                             <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Suscripción</div>@item.TipoSuscripcion × @item.CantidadPeriodos @(item.TipoSuscripcion == "Anual" ? "año(s)" : "mes(es)")</div>
                         }
-                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Costo Estimado (@item.TipoCosto@(string.IsNullOrWhiteSpace(item.TipoSuscripcion) ? "" : ", por período"))</div>@item.CostoEstimado.ToString("$#,##0.00")</div>
-                        <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Subtotal</div>@item.Subtotal.ToString("$#,##0.00")</div>
+                        @if (item.TienePresupuesto)
+                        {
+                            <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Costo Estimado (@item.TipoCosto@(string.IsNullOrWhiteSpace(item.TipoSuscripcion) ? "" : ", por período"))</div>@item.CostoEstimado.ToString("$#,##0.00")</div>
+                            <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Subtotal</div>@item.Subtotal.ToString("$#,##0.00")</div>
+                        }
+                        else
+                        {
+                            <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Monto Presupuestado</div>Sin presupuesto</div>
+                        }
                         @if (item.TieneCotizacion)
                         {
                             <div><div style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Cotización Adjunta</div><a href="@Url.Action("Cotizacion", "Solicitudes", new { solicitudItemId = item.Id })" target="_blank">@item.CotizacionNombreOriginal</a></div>
@@ -111,8 +119,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Progreso (%)</label>
-                    <input type="number" name="Progreso" min="0" max="100" value="@Model.Progreso" class="form-control" />
+                    <label class="form-label">Progreso</label>
+                    <div class="progress-track"><span style="width:@(Model.Progreso ?? 0)%;"></span></div>
+                    <span style="font-size:11.5px;color:var(--dga-muted);">@(Model.Progreso is null ? "No aplica para este estado" : $"{Model.Progreso}% — se calcula según el estado")</span>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Comentario Administrativo</label>
@@ -138,7 +147,7 @@
                     @foreach (var h in Model.Historial)
                     {
                         <div style="font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
-                            <div style="color:var(--dga-muted);margin-bottom:4px;">@h.FechaCambio.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div style="color:var(--dga-muted);margin-bottom:4px;">@h.FechaCambio.ASalvador().ToString("dd/MM/yyyy HH:mm")</div>
                             <div><partial name="_EstadoBadge" model="@(h.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@h.EstadoNuevo" /></div>
                             @if (!string.IsNullOrWhiteSpace(h.Comentario))
                             {

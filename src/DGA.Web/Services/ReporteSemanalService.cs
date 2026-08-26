@@ -84,8 +84,7 @@ public class ReporteSemanalService(ApplicationDbContext db, IWebHostEnvironment 
                     {
                         fila.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("Global Customs Solutions").FontSize(14).Bold();
-                            c.Item().Text("Reporte Semanal de Solicitudes").FontSize(10).FontColor(Colors.Grey.Darken1);
+                            c.Item().Text("Reporte Semanal de Solicitudes").FontSize(14).Bold();
                         });
                         fila.ConstantItem(220).AlignRight().Column(c =>
                         {
@@ -125,7 +124,7 @@ public class ReporteSemanalService(ApplicationDbContext db, IWebHostEnvironment 
                         {
                             var componentePrincipal = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Componente.Nombre).FirstOrDefault() ?? "-";
                             tabla.Cell().Padding(4).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Text(s.IdSolicitud);
-                            tabla.Cell().Padding(4).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Text(s.FechaRegistro.ToString("dd/MM/yyyy"));
+                            tabla.Cell().Padding(4).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Text(s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy"));
                             tabla.Cell().Padding(4).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Text(s.NombreResponsable).FontSize(8.5f);
                             tabla.Cell().Padding(4).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Text($"{s.Aduana.Codigo} - {s.Aduana.Nombre}").FontSize(8.5f);
                             tabla.Cell().Padding(4).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Text(componentePrincipal).FontSize(8.5f);
@@ -138,7 +137,7 @@ public class ReporteSemanalService(ApplicationDbContext db, IWebHostEnvironment 
                 pagina.Footer().AlignCenter().Text(t =>
                 {
                     t.Span("Generado el ").FontSize(8);
-                    t.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(8);
+                    t.Span(DateTime.UtcNow.ASalvador().ToString("dd/MM/yyyy HH:mm")).FontSize(8);
                     t.Span(" — Página ").FontSize(8);
                     t.CurrentPageNumber().FontSize(8);
                     t.Span(" de ").FontSize(8);
@@ -173,7 +172,7 @@ public class ReporteSemanalService(ApplicationDbContext db, IWebHostEnvironment 
         {
             var componentePrincipal = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Componente.Nombre).FirstOrDefault() ?? "-";
             hoja.Cell(fila, 1).Value = s.IdSolicitud;
-            hoja.Cell(fila, 2).Value = s.FechaRegistro.ToString("dd/MM/yyyy HH:mm");
+            hoja.Cell(fila, 2).Value = s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy HH:mm");
             hoja.Cell(fila, 3).Value = s.NombreResponsable;
             hoja.Cell(fila, 4).Value = $"{s.Aduana.Codigo} - {s.Aduana.Nombre}";
             hoja.Cell(fila, 5).Value = componentePrincipal;

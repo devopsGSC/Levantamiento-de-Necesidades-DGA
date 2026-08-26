@@ -36,6 +36,15 @@ public class Cargo
     public bool Activo { get; set; } = true;
 }
 
+/// <summary>Unidad ejecutora responsable de tramitar la solicitud (Mantenimiento DGA, Compras DGA, Otro).</summary>
+public class UnidadEjecutora
+{
+    public byte Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public short Orden { get; set; }
+    public bool Activo { get; set; } = true;
+}
+
 /// <summary>Nivel 1 del catálogo en cascada de ítems.</summary>
 public class Componente
 {

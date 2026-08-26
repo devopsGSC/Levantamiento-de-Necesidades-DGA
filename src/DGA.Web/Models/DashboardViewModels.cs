@@ -13,7 +13,7 @@ public class DashboardViewModel
     public int Finalizadas { get; set; }
     public int EnProceso { get; set; }
     public int Pendientes { get; set; }
-    public int RechazadasODenegadas { get; set; }
+    public int Denegadas { get; set; }
     public int Borradores { get; set; }
     public int PrioridadAlta { get; set; }
     public double ProgresoPromedio { get; set; }

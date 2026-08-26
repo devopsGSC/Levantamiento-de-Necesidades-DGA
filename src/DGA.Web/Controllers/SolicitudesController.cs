@@ -119,6 +119,7 @@ public class SolicitudesController(
             IdSolicitud = solicitud.IdSolicitud,
             NombreResponsable = solicitud.NombreResponsable,
             CargoId = solicitud.CargoId,
+            UnidadEjecutoraId = solicitud.UnidadEjecutoraId,
             TipoAduanaId = solicitud.Aduana.TipoAduanaId,
             AduanaId = solicitud.AduanaId,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -140,6 +141,7 @@ public class SolicitudesController(
             DetalleId = i.DetalleId,
             DetalleNombre = i.Detalle?.Nombre,
             CantidadSolicitada = i.CantidadSolicitada,
+            TienePresupuesto = i.TienePresupuesto,
             CostoEstimado = i.CostoEstimado,
             TipoCosto = i.TipoCosto,
             CotizacionRutaExistente = i.CotizacionRuta,
@@ -190,13 +192,16 @@ public class SolicitudesController(
         }
         foreach (var item in items)
         {
-            if (item.CostoEstimado <= 0)
+            if (item.TienePresupuesto)
             {
-                ModelState.AddModelError(string.Empty, $"Ítem {item.NumeroItem}: ingresá el costo estimado.");
-            }
-            if (item.TipoCosto != "Unitario" && item.TipoCosto != "Total")
-            {
-                ModelState.AddModelError(string.Empty, $"Ítem {item.NumeroItem}: el tipo de costo debe ser Unitario o Total.");
+                if (item.CostoEstimado <= 0)
+                {
+                    ModelState.AddModelError(string.Empty, $"Ítem {item.NumeroItem}: ingresá el costo estimado.");
+                }
+                if (item.TipoCosto != "Unitario" && item.TipoCosto != "Total")
+                {
+                    ModelState.AddModelError(string.Empty, $"Ítem {item.NumeroItem}: el tipo de costo debe ser Unitario o Total.");
+                }
             }
         }
 
@@ -242,6 +247,7 @@ public class SolicitudesController(
 
         solicitud.NombreResponsable = model.NombreResponsable;
         solicitud.CargoId = model.CargoId!.Value;
+        solicitud.UnidadEjecutoraId = model.UnidadEjecutoraId!.Value;
         solicitud.AduanaId = model.AduanaId!.Value;
         solicitud.JustificacionGeneral = model.JustificacionGeneral;
         solicitud.ObservacionesGenerales = model.ObservacionesGenerales;
@@ -250,6 +256,7 @@ public class SolicitudesController(
         var estadoAnterior = solicitud.EstadoId;
         var finalizando = model.Accion == "finalizar";
         solicitud.EstadoId = finalizando ? Estados.Solicitado : Estados.GuardadoBorrador;
+        solicitud.Progreso = Estados.ProgresoParaEstado(solicitud.EstadoId);
 
         foreach (var item in items)
         {
@@ -262,6 +269,7 @@ public class SolicitudesController(
                 ElementoLibre = item.ElementoLibre,
                 DetalleId = item.DetalleId,
                 CantidadSolicitada = item.CantidadSolicitada,
+                TienePresupuesto = item.TienePresupuesto,
                 CostoEstimado = item.CostoEstimado,
                 TipoCosto = item.TipoCosto,
                 TipoSuscripcion = item.TipoSuscripcion,
@@ -273,7 +281,7 @@ public class SolicitudesController(
                 UpdatedAt = DateTime.UtcNow,
             };
 
-            if (!string.IsNullOrEmpty(item.CotizacionTokenNuevo))
+            if (item.TienePresupuesto && !string.IsNullOrEmpty(item.CotizacionTokenNuevo))
             {
                 try
                 {
@@ -285,7 +293,7 @@ public class SolicitudesController(
                     logger.LogWarning(ex, "No se pudo confirmar la cotización temporal {Token}", item.CotizacionTokenNuevo);
                 }
             }
-            else if (!string.IsNullOrEmpty(item.CotizacionRutaExistente))
+            else if (item.TienePresupuesto && !string.IsNullOrEmpty(item.CotizacionRutaExistente))
             {
                 nuevoItem.CotizacionRuta = item.CotizacionRutaExistente;
                 nuevoItem.CotizacionNombreOriginal = item.CotizacionNombreExistente;
@@ -358,6 +366,7 @@ public class SolicitudesController(
         var solicitud = await db.Solicitudes
             .Include(s => s.Aduana).ThenInclude(a => a.TipoAduana)
             .Include(s => s.Cargo)
+            .Include(s => s.UnidadEjecutora)
             .Include(s => s.Estado)
             .Include(s => s.Items).ThenInclude(i => i.Componente)
             .Include(s => s.Items).ThenInclude(i => i.Subcomponente)
@@ -380,6 +389,7 @@ public class SolicitudesController(
             Estado = solicitud.Estado.Nombre,
             NombreResponsable = solicitud.NombreResponsable,
             Cargo = solicitud.Cargo?.Nombre,
+            UnidadEjecutora = solicitud.UnidadEjecutora?.Nombre,
             Aduana = $"{solicitud.Aduana.Codigo} - {solicitud.Aduana.Nombre}",
             TipoAduana = solicitud.Aduana.TipoAduana.Nombre,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -387,6 +397,7 @@ public class SolicitudesController(
             FechaRegistro = solicitud.FechaRegistro,
             EsEditable = solicitud.UsuarioId == UsuarioIdActual && Estados.EsEditablePorDueno(solicitud.EstadoId),
             PuedeDescartar = solicitud.UsuarioId == UsuarioIdActual && Estados.PuedeDescartar(solicitud.EstadoId),
+            EsAdmin = EsAdmin,
             Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
             {
                 Id = i.Id,
@@ -396,6 +407,7 @@ public class SolicitudesController(
                 Elemento = i.Elemento?.Nombre ?? i.ElementoLibre,
                 Detalle = i.Detalle?.Nombre,
                 CantidadSolicitada = i.CantidadSolicitada,
+                TienePresupuesto = i.TienePresupuesto,
                 CostoEstimado = i.CostoEstimado,
                 TipoCosto = i.TipoCosto,
                 CotizacionNombreOriginal = i.CotizacionNombreOriginal,
@@ -606,6 +618,8 @@ public class SolicitudesController(
     {
         model.CargoOptions = await db.Cargos.Where(c => c.Activo || c.Id == model.CargoId)
             .OrderBy(c => c.Orden).Select(c => new OpcionCatalogo(c.Id, c.Nombre)).ToListAsync();
+        model.UnidadEjecutoraOptions = await db.UnidadesEjecutoras.Where(u => u.Activo || u.Id == model.UnidadEjecutoraId)
+            .OrderBy(u => u.Orden).Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync();
         model.TipoAduanaOptions = await db.TiposAduana.Where(t => t.Activo || t.Id == model.TipoAduanaId)
             .OrderBy(t => t.Orden).Select(t => new OpcionCatalogo(t.Id, t.Nombre)).ToListAsync();
 

@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<TipoAduana> TiposAduana => Set<TipoAduana>();
     public DbSet<Aduana> Aduanas => Set<Aduana>();
     public DbSet<Cargo> Cargos => Set<Cargo>();
+    public DbSet<UnidadEjecutora> UnidadesEjecutoras => Set<UnidadEjecutora>();
     public DbSet<Componente> Componentes => Set<Componente>();
     public DbSet<Subcomponente> Subcomponentes => Set<Subcomponente>();
     public DbSet<Elemento> Elementos => Set<Elemento>();
@@ -79,6 +80,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.HasOne(s => s.Cargo)
                 .WithMany()
                 .HasForeignKey(s => s.CargoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(s => s.UnidadEjecutora)
+                .WithMany()
+                .HasForeignKey(s => s.UnidadEjecutoraId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasOne(s => s.Aduana)

@@ -31,6 +31,7 @@
     </div>
 
     <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Cargos", RutaBase = "/Admin/Configuracion/Cargos", Items = Model.Cargos })" />
+    <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Unidades Ejecutoras", RutaBase = "/Admin/Configuracion/UnidadesEjecutoras", Items = Model.UnidadesEjecutoras })" />
     <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Prioridades", RutaBase = "/Admin/Configuracion/Prioridades", Items = Model.Prioridades })" />
     <partial name="_CatalogoSimpleTabla" model="@(new CatalogoSimpleSeccionViewModel { Titulo = "Tipos de Aduana", RutaBase = "/Admin/Configuracion/TiposAduana", Items = Model.TiposAduana })" />
 </div>

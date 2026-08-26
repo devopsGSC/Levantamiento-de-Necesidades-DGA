@@ -20,6 +20,10 @@ public class SolicitudFormViewModel
     [Display(Name = "Cargo")]
     public byte? CargoId { get; set; }
 
+    [Required(ErrorMessage = "Seleccioná la unidad ejecutora.")]
+    [Display(Name = "Unidad Ejecutora")]
+    public byte? UnidadEjecutoraId { get; set; }
+
     [Required(ErrorMessage = "Seleccioná el tipo de aduana.")]
     [Display(Name = "Tipo de Aduana")]
     public byte? TipoAduanaId { get; set; }
@@ -42,6 +46,7 @@ public class SolicitudFormViewModel
 
     // -- Opciones de catálogo para poblar los combos (las llena el controlador) --
     public List<OpcionCatalogo> CargoOptions { get; set; } = new();
+    public List<OpcionCatalogo> UnidadEjecutoraOptions { get; set; } = new();
     public List<OpcionCatalogo> TipoAduanaOptions { get; set; } = new();
     public List<OpcionCatalogo> ComponenteOptions { get; set; } = new();
     public List<OpcionCatalogo> PrioridadOptions { get; set; } = new();
@@ -77,6 +82,7 @@ public class SolicitudItemFormViewModel
     public int? DetalleId { get; set; }
     public string? DetalleNombre { get; set; }
     public int CantidadSolicitada { get; set; }
+    public bool TienePresupuesto { get; set; }
     public decimal CostoEstimado { get; set; }
     public string TipoCosto { get; set; } = "Unitario";
     public string? CotizacionTokenNuevo { get; set; }

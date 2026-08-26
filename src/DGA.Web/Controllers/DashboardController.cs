@@ -72,10 +72,10 @@ public class DashboardController(ApplicationDbContext db) : Controller
         };
 
         vm.Finalizadas = filas.Count(f => f.EstadoId == Estados.Finalizado);
-        vm.RechazadasODenegadas = filas.Count(f => f.EstadoId is Estados.Denegado or Estados.Rechazado);
+        vm.Denegadas = filas.Count(f => f.EstadoId == Estados.Denegado);
         vm.Borradores = filas.Count(f => f.EstadoId == Estados.GuardadoBorrador);
-        vm.EnProceso = vm.Total - vm.Finalizadas - vm.RechazadasODenegadas - vm.Borradores;
-        vm.Pendientes = filas.Count(f => f.EstadoId is Estados.Solicitado or Estados.Pendiente);
+        vm.EnProceso = vm.Total - vm.Finalizadas - vm.Denegadas - vm.Borradores;
+        vm.Pendientes = filas.Count(f => f.EstadoId == Estados.Solicitado);
         vm.PrioridadAlta = filas.Count(f => f.PrimeraPrioridadId == 1);
         vm.ProgresoPromedio = vm.Total == 0 ? 0 : Math.Round(filas.Average(f => f.Progreso), 0);
 

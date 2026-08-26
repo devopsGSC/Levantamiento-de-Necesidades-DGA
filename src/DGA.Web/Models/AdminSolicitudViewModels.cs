@@ -29,6 +29,7 @@ public class AdminSolicitudDetailViewModel
     public string Estado { get; set; } = string.Empty;
     public string NombreResponsable { get; set; } = string.Empty;
     public string? Cargo { get; set; }
+    public string? UnidadEjecutora { get; set; }
     public string Aduana { get; set; } = string.Empty;
     public string TipoAduana { get; set; } = string.Empty;
     public string JustificacionGeneral { get; set; } = string.Empty;
@@ -49,6 +50,5 @@ public class CambiarEstadoViewModel
 {
     public int SolicitudId { get; set; }
     public byte NuevoEstadoId { get; set; }
-    public byte? Progreso { get; set; }
     public string? Comentario { get; set; }
 }

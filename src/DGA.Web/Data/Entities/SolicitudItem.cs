@@ -22,7 +22,13 @@ public class SolicitudItem
 
     public int CantidadSolicitada { get; set; }
 
-    /// <summary>Monto que ingresa el usuario al armar el ítem — obligatorio, mayor a 0. Su
+    /// <summary>Si el usuario indicó tener un monto presupuestado para este ítem. Opcional —
+    /// en "No" (el valor por defecto) <see cref="CostoEstimado"/>, <see cref="TipoCosto"/> y la
+    /// cotización adjunta quedan sin usar (0 / valor por defecto / null).</summary>
+    public bool TienePresupuesto { get; set; }
+
+    /// <summary>Monto que ingresa el usuario al armar el ítem — solo aplica si
+    /// <see cref="TienePresupuesto"/> es true, y en ese caso es obligatorio y mayor a 0. Su
     /// significado depende de <see cref="TipoCosto"/>: si es "Unitario" es el costo de UNA
     /// unidad (ej. una cerámica) y el subtotal multiplica por CantidadSolicitada; si es
     /// "Total" ya incluye todo (ej. cerámica + mano de obra) y no se vuelve a multiplicar.

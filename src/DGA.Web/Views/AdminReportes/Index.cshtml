@@ -46,7 +46,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    @r.GeneradoEn.ToString("dd/MM/yyyy HH:mm")
+                                    @r.GeneradoEn.ASalvador().ToString("dd/MM/yyyy HH:mm")
                                     @if (!string.IsNullOrWhiteSpace(r.GeneradoPor))
                                     {
                                         <div style="color:var(--dga-muted);font-size:12px;">por @r.GeneradoPor</div>

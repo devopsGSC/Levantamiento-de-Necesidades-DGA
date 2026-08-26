@@ -354,7 +354,7 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
   background: linear-gradient(135deg, var(--dga-accent), var(--dga-accent-dark));
 }
 .action-card h3 { margin: 10px 0 2px; font-size: 17px; }
-.action-card p { margin: 0; font-size: 13.5px; color: #fff; }
+.hero .action-card p { margin: 0; font-size: 13.5px; color: #fff; }
 .action-card__top { display: flex; align-items: flex-start; justify-content: space-between; }
 .action-card__icon {
   width: 44px; height: 44px; border-radius: 10px;
@@ -393,15 +393,9 @@ form.is-submitting { opacity: .7; pointer-events: none; cursor: wait; }
    distinguirlos de un vistazo en listas y bitácoras — se aplican vía _EstadoBadge.cshtml. */
 .status-badge.is-estado-borrador   { background: #F1F5F9; color: #475569; }
 .status-badge.is-estado-solicitado { background: #DBEAFE; color: #1D4ED8; }
-.status-badge.is-estado-pendiente  { background: #FEF3E2; color: #D97706; }
 .status-badge.is-estado-aprobado   { background: #E8F8EE; color: #16A34A; }
 .status-badge.is-estado-denegado   { background: #FDECEC; color: #DC2626; }
-.status-badge.is-estado-comprado   { background: #E6FFFA; color: #0D9488; }
-.status-badge.is-estado-realizado  { background: #DCFCE7; color: #15803D; }
 .status-badge.is-estado-enproceso  { background: #EEF2FF; color: #4F46E5; }
-.status-badge.is-estado-rechazado  { background: #FFE4E6; color: #BE123C; }
-.status-badge.is-estado-observado  { background: #FFEDD5; color: #C2410C; }
-.status-badge.is-estado-cotizado   { background: #E0F2FE; color: #0284C7; }
 .status-badge.is-estado-finalizado { background: #EDE9FE; color: #6D28D9; }
 
 /* ---------- Footer ---------- */
@@ -694,6 +688,7 @@ textarea.form-control { min-height: 88px; resize: vertical; font-family: inherit
 .elemento-checklist__item input { margin: 0; flex-shrink: 0; }
 .elemento-checklist__item[hidden] { display: none; }
 .elemento-checklist__vacio { padding: 12px; text-align: center; font-size: 13px; color: var(--dga-muted); }
+.elemento-checklist.is-invalid { border-color: var(--dga-danger); }
 
 .cost-panel {
   border: 1px solid var(--dga-border); border-radius: var(--dga-radius-sm);

@@ -29,7 +29,7 @@ public static class CredencialesEmailTemplate
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
                 <tr>
                   <td style="background:#2563EB;padding:20px 32px;">
-                    <img src="cid:{LogoContentId}" alt="Global Customs Solutions" width="150" height="49" style="display:block;border:0;" />
+                    <img src="cid:{LogoContentId}" alt="Global Customs Solutions" width="150" height="49" style="display:block;border:0;width:150px;height:49px;max-width:150px;" />
                   </td>
                 </tr>
                 <tr>

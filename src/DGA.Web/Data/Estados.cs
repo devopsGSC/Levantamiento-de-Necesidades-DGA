@@ -27,13 +27,18 @@ public static class Estados
     /// <summary>
     /// Progreso (0-100) que corresponde a cada estado. Denegado no tiene un punto de
     /// avance definido — es una salida negativa del flujo, no un porcentaje de él.
+    /// Flujo: Guardado Borrador/Solicitado -> Aprobado -> En Proceso -> Finalizado.
     /// </summary>
     public static byte? ProgresoParaEstado(byte estadoId) => estadoId switch
     {
         GuardadoBorrador or Solicitado => 0,
-        EnProceso => 40,
-        Aprobado => 60,
+        Aprobado => 40,
+        EnProceso => 60,
         Finalizado => 100,
         _ => null,
     };
+
+    /// <summary>La Unidad Ejecutora la define el administrador recién al aprobar la
+    /// solicitud — es el análisis que determina quién la va a tramitar.</summary>
+    public static bool RequiereUnidadEjecutora(byte estadoId) => estadoId == Aprobado;
 }

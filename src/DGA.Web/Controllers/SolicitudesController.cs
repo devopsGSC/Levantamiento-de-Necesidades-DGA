@@ -119,7 +119,6 @@ public class SolicitudesController(
             IdSolicitud = solicitud.IdSolicitud,
             NombreResponsable = solicitud.NombreResponsable,
             CargoId = solicitud.CargoId,
-            UnidadEjecutoraId = solicitud.UnidadEjecutoraId,
             TipoAduanaId = solicitud.Aduana.TipoAduanaId,
             AduanaId = solicitud.AduanaId,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -247,7 +246,6 @@ public class SolicitudesController(
 
         solicitud.NombreResponsable = model.NombreResponsable;
         solicitud.CargoId = model.CargoId!.Value;
-        solicitud.UnidadEjecutoraId = model.UnidadEjecutoraId!.Value;
         solicitud.AduanaId = model.AduanaId!.Value;
         solicitud.JustificacionGeneral = model.JustificacionGeneral;
         solicitud.ObservacionesGenerales = model.ObservacionesGenerales;
@@ -618,8 +616,6 @@ public class SolicitudesController(
     {
         model.CargoOptions = await db.Cargos.Where(c => c.Activo || c.Id == model.CargoId)
             .OrderBy(c => c.Orden).Select(c => new OpcionCatalogo(c.Id, c.Nombre)).ToListAsync();
-        model.UnidadEjecutoraOptions = await db.UnidadesEjecutoras.Where(u => u.Activo || u.Id == model.UnidadEjecutoraId)
-            .OrderBy(u => u.Orden).Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync();
         model.TipoAduanaOptions = await db.TiposAduana.Where(t => t.Activo || t.Id == model.TipoAduanaId)
             .OrderBy(t => t.Orden).Select(t => new OpcionCatalogo(t.Id, t.Nombre)).ToListAsync();
 

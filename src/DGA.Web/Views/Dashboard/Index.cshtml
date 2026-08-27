@@ -48,6 +48,51 @@
                 }
             </select>
         </div>
+        <div class="field">
+            <label>Estado</label>
+            <select name="estadoId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todos los estados</option>
+                @foreach (var opcion in Model.EstadoOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroEstadoId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Prioridad</label>
+            <select name="prioridadId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todas las prioridades</option>
+                @foreach (var opcion in Model.PrioridadOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroPrioridadId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Unidad Ejecutora</label>
+            <select name="unidadEjecutoraId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todas</option>
+                @foreach (var opcion in Model.UnidadEjecutoraOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroUnidadEjecutoraId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Desde</label>
+            <input type="date" name="fechaDesde" class="form-control" value="@Model.FiltroFechaDesde?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+        </div>
+        <div class="field">
+            <label>Hasta</label>
+            <input type="date" name="fechaHasta" class="form-control" value="@Model.FiltroFechaHasta?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+        </div>
+        @if (Model.TieneFiltrosActivos)
+        {
+            <div class="field" style="min-width:0;">
+                <label>&nbsp;</label>
+                <a asp-action="Index" class="btn btn-link">Limpiar filtros</a>
+            </div>
+        }
     </form>
 
     <div class="kpi-grid">
@@ -93,7 +138,7 @@
 
     <div class="dash-row">
         <div class="card chart-card">
-            <h3>Tendencia de Solicitudes (últimos 14 días)</h3>
+            <h3>Tendencia de Solicitudes (@(Model.FiltroFechaDesde.HasValue || Model.FiltroFechaHasta.HasValue ? "período filtrado" : "últimos 14 días"))</h3>
             <canvas id="chartTendencia"></canvas>
         </div>
         <div class="card chart-card">

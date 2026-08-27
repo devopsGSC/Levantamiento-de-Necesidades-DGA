@@ -10,7 +10,12 @@ public class Solicitud
     public int UsuarioId { get; set; }
     public string NombreResponsable { get; set; } = string.Empty;
     public byte CargoId { get; set; }
-    public byte UnidadEjecutoraId { get; set; }
+
+    /// <summary>Quién va a tramitar la solicitud — no la elige el usuario al armarla, la
+    /// define el administrador recién al aprobarla (ver <see cref="Data.Estados.RequiereUnidadEjecutora"/>).
+    /// Null mientras la solicitud no llegó a Aprobado.</summary>
+    public byte? UnidadEjecutoraId { get; set; }
+
     public int AduanaId { get; set; }
     public string JustificacionGeneral { get; set; } = string.Empty;
     public string? ObservacionesGenerales { get; set; }
@@ -31,7 +36,7 @@ public class Solicitud
     public ApplicationUser Usuario { get; set; } = null!;
     public ApplicationUser? AdminRevisor { get; set; }
     public Cargo Cargo { get; set; } = null!;
-    public UnidadEjecutora UnidadEjecutora { get; set; } = null!;
+    public UnidadEjecutora? UnidadEjecutora { get; set; }
     public Aduana Aduana { get; set; } = null!;
     public EstadoSolicitud Estado { get; set; } = null!;
 

@@ -53,19 +53,6 @@
                     <span asp-validation-for="CargoId" class="field-validation-error"></span>
                 </div>
                 <div>
-                    <label class="form-label">Unidad Ejecutora *</label>
-                    <div id="unidad-ejecutora-checklist" class="elemento-checklist" tabindex="-1" style="max-height:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
-                        @foreach (var u in Model.UnidadEjecutoraOptions)
-                        {
-                            <label class="elemento-checklist__item">
-                                <input type="radio" name="UnidadEjecutoraId" value="@u.Id" checked="@(Model.UnidadEjecutoraId == u.Id)" />
-                                <span>@u.Nombre</span>
-                            </label>
-                        }
-                    </div>
-                    <span asp-validation-for="UnidadEjecutoraId" class="field-validation-error"></span>
-                </div>
-                <div>
                     <label asp-for="TipoAduanaId" class="form-label">Tipo de Aduana *</label>
                     <select asp-for="TipoAduanaId" id="TipoAduanaId" class="form-control">
                         <option value="">Seleccionar Aduana</option>

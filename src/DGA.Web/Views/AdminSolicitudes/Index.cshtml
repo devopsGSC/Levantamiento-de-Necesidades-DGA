@@ -1,6 +1,21 @@
+@using Microsoft.AspNetCore.Routing
 @model AdminSolicitudIndexViewModel
 @{
     ViewData["Title"] = "Panel de Administración — Solicitudes";
+    var rutaFiltros = new RouteValueDictionary
+    {
+        ["busqueda"] = Model.Busqueda,
+        ["estado"] = Model.EstadoFiltro,
+        ["tipoAduanaId"] = Model.TipoAduanaFiltro,
+        ["aduanaId"] = Model.AduanaFiltro,
+        ["componenteId"] = Model.ComponenteFiltro,
+        ["subcomponenteId"] = Model.SubcomponenteFiltro,
+        ["elementoId"] = Model.ElementoFiltro,
+        ["prioridadId"] = Model.PrioridadFiltro,
+        ["unidadEjecutoraId"] = Model.UnidadEjecutoraFiltro,
+        ["fechaDesde"] = Model.FechaDesde?.ToString("yyyy-MM-dd"),
+        ["fechaHasta"] = Model.FechaHasta?.ToString("yyyy-MM-dd"),
+    };
 }
 
 <div class="container-page">
@@ -10,18 +25,120 @@
     <div class="card" style="padding:20px 22px;margin-bottom:16px;">
         <h3 style="margin:0 0 4px;font-size:16px;">Gestión de Solicitudes</h3>
         <p style="margin:0 0 16px;color:var(--dga-muted);font-size:13px;">Visualiza, filtra y administra todas las solicitudes registradas en el sistema.</p>
-        <form method="get" class="admin-toolbar">
-            <div style="flex:1;min-width:220px;">
-                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar ID, componente..." />
+        <form method="get" class="filters-bar" style="margin:0 0 4px;">
+            <div class="field" style="min-width:240px;flex:1;">
+                <label>Buscar</label>
+                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="ID de solicitud o nombre del solicitante" />
             </div>
-            <select name="estado" class="form-control" style="max-width:220px;">
-                <option value="">Todos</option>
-                @foreach (var opcion in Model.EstadoOptions)
+            <div class="field">
+                <label>Estado</label>
+                <select name="estado" class="form-control" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    @foreach (var opcion in Model.EstadoOptions)
+                    {
+                        <option value="@opcion.Id" selected="@(Model.EstadoFiltro == opcion.Id)">@opcion.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Tipo de Aduana</label>
+                <select name="tipoAduanaId" class="form-control" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    @foreach (var opcion in Model.TipoAduanaOptions)
+                    {
+                        <option value="@opcion.Id" selected="@(Model.TipoAduanaFiltro == opcion.Id)">@opcion.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Aduana</label>
+                <select name="aduanaId" class="form-control" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    @foreach (var opcion in Model.AduanaOptions)
+                    {
+                        <option value="@opcion.Id" selected="@(Model.AduanaFiltro == opcion.Id)">@opcion.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Unidad Ejecutora</label>
+                <select name="unidadEjecutoraId" class="form-control" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    @foreach (var opcion in Model.UnidadEjecutoraOptions)
+                    {
+                        <option value="@opcion.Id" selected="@(Model.UnidadEjecutoraFiltro == opcion.Id)">@opcion.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Componente</label>
+                <select name="componenteId" class="form-control" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    @foreach (var opcion in Model.ComponenteOptions)
+                    {
+                        <option value="@opcion.Id" selected="@(Model.ComponenteFiltro == opcion.Id)">@opcion.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Subcomponente</label>
+                <select name="subcomponenteId" class="form-control" onchange="this.form.submit()" disabled="@(!Model.ComponenteFiltro.HasValue)">
+                    @if (!Model.ComponenteFiltro.HasValue)
+                    {
+                        <option value="">Elegí un componente primero</option>
+                    }
+                    else
+                    {
+                        <option value="">Todos</option>
+                        @foreach (var opcion in Model.SubcomponenteOptions)
+                        {
+                            <option value="@opcion.Id" selected="@(Model.SubcomponenteFiltro == opcion.Id)">@opcion.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Elemento</label>
+                <select name="elementoId" class="form-control" onchange="this.form.submit()" disabled="@(!Model.SubcomponenteFiltro.HasValue)">
+                    @if (!Model.SubcomponenteFiltro.HasValue)
+                    {
+                        <option value="">Elegí un subcomponente primero</option>
+                    }
+                    else
+                    {
+                        <option value="">Todos</option>
+                        @foreach (var opcion in Model.ElementoOptions)
+                        {
+                            <option value="@opcion.Id" selected="@(Model.ElementoFiltro == opcion.Id)">@opcion.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Prioridad</label>
+                <select name="prioridadId" class="form-control" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    @foreach (var opcion in Model.PrioridadOptions)
+                    {
+                        <option value="@opcion.Id" selected="@(Model.PrioridadFiltro == opcion.Id)">@opcion.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Desde</label>
+                <input type="date" name="fechaDesde" class="form-control" value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="field">
+                <label>Hasta</label>
+                <input type="date" name="fechaHasta" class="form-control" value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="field" style="min-width:0;display:flex;gap:8px;">
+                <button type="submit" class="btn btn-outline">Filtrar</button>
+                @if (Model.TieneFiltrosActivos)
                 {
-                    <option value="@opcion.Id" selected="@(Model.EstadoFiltro == opcion.Id)">@opcion.Nombre</option>
+                    <a asp-action="Index" class="btn btn-link">Limpiar filtros</a>
                 }
-            </select>
-            <button type="submit" class="btn btn-outline">Filtrar</button>
+            </div>
         </form>
     </div>
 
@@ -30,13 +147,13 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Componente</th><th>Elemento</th><th>Detalle</th><th>Estado</th><th>Acciones</th>
+                        <th>ID</th><th>Componente</th><th>Elemento</th><th>Detalle</th><th>Aduana</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model.Solicitudes.Count == 0)
                     {
-                        <tr><td colspan="6" style="text-align:center;color:var(--dga-muted);padding:28px;">No hay solicitudes que coincidan con el filtro.</td></tr>
+                        <tr><td colspan="8" style="text-align:center;color:var(--dga-muted);padding:28px;">No hay solicitudes que coincidan con el filtro.</td></tr>
                     }
                     else
                     {
@@ -47,6 +164,8 @@
                                 <td>@s.Componente</td>
                                 <td>@s.Elemento</td>
                                 <td>@s.Detalle</td>
+                                <td>@s.Aduana</td>
+                                <td>@s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy")</td>
                                 <td><partial name="_EstadoBadge" model="@s.Estado" /></td>
                                 <td>
                                     <div class="row-actions">
@@ -64,10 +183,18 @@
             <span>Mostrando página @Model.PaginaActual de @Model.TotalPaginas (@Model.TotalResultados resultados)</span>
             <div style="display:flex;gap:8px;">
                 <a class="btn btn-outline btn-sm @(Model.PaginaActual <= 1 ? "disabled" : "")"
-                   asp-action="Index" asp-route-pagina="@(Model.PaginaActual - 1)" asp-route-busqueda="@Model.Busqueda" asp-route-estado="@Model.EstadoFiltro">Anterior</a>
+                   href="@Url.Action("Index", MergePagina(rutaFiltros, Model.PaginaActual - 1))">Anterior</a>
                 <a class="btn btn-outline btn-sm @(Model.PaginaActual >= Model.TotalPaginas ? "disabled" : "")"
-                   asp-action="Index" asp-route-pagina="@(Model.PaginaActual + 1)" asp-route-busqueda="@Model.Busqueda" asp-route-estado="@Model.EstadoFiltro">Siguiente</a>
+                   href="@Url.Action("Index", MergePagina(rutaFiltros, Model.PaginaActual + 1))">Siguiente</a>
             </div>
         </div>
     </div>
 </div>
+
+@functions {
+    private static RouteValueDictionary MergePagina(RouteValueDictionary filtros, int pagina)
+    {
+        var copia = new RouteValueDictionary(filtros) { ["pagina"] = pagina };
+        return copia;
+    }
+}

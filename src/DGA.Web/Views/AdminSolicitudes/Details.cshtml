@@ -23,7 +23,7 @@
             <h3 style="margin:0 0 14px;font-size:15px;">Información General</h3>
             <div class="detail-fields-grid">
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Responsable</div><div>@Model.NombreResponsable</div><div style="color:var(--dga-muted);">@Model.Cargo</div></div>
-                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Unidad Ejecutora</div><div>@Model.UnidadEjecutora</div></div>
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Unidad Ejecutora</div><div>@(Model.UnidadEjecutora ?? "Pendiente de asignar")</div></div>
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Aduana</div><div>@Model.Aduana</div><div style="color:var(--dga-muted);">@Model.TipoAduana</div></div>
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Fecha de Registro</div><div>@Model.FechaRegistro.ASalvador().ToString("dd/MM/yyyy HH:mm")</div></div>
                 @if (Model.FechaRevision.HasValue)
@@ -122,6 +122,17 @@
                     <label class="form-label">Progreso</label>
                     <div class="progress-track"><span style="width:@(Model.Progreso ?? 0)%;"></span></div>
                     <span style="font-size:11.5px;color:var(--dga-muted);">@(Model.Progreso is null ? "No aplica para este estado" : $"{Model.Progreso}% — se calcula según el estado")</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unidad Ejecutora</label>
+                    <select name="UnidadEjecutoraId" class="form-control">
+                        <option value="">Sin asignar</option>
+                        @foreach (var opcion in Model.UnidadEjecutoraOptions)
+                        {
+                            <option value="@opcion.Id" selected="@(Model.UnidadEjecutoraId == opcion.Id)">@opcion.Nombre</option>
+                        }
+                    </select>
+                    <span style="font-size:11.5px;color:var(--dga-muted);">Se define al aprobar la solicitud — obligatoria para pasar a "Aprobado".</span>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Comentario Administrativo</label>

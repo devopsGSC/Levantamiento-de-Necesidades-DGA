@@ -29,7 +29,9 @@ file class SolicitudResumen
 public class DashboardController(ApplicationDbContext db) : Controller
 {
     [HttpGet("")]
-    public async Task<IActionResult> Index(int? aduanaId, byte? componenteId)
+    public async Task<IActionResult> Index(
+        int? aduanaId, byte? componenteId, byte? estadoId, byte? prioridadId,
+        byte? unidadEjecutoraId, DateTime? fechaDesde, DateTime? fechaHasta)
     {
         var query = db.Solicitudes.Where(s => !s.IsDeleted);
         if (aduanaId.HasValue)
@@ -39,6 +41,27 @@ public class DashboardController(ApplicationDbContext db) : Controller
         if (componenteId.HasValue)
         {
             query = query.Where(s => s.Items.Any(i => i.ComponenteId == componenteId.Value));
+        }
+        if (estadoId.HasValue)
+        {
+            query = query.Where(s => s.EstadoId == estadoId.Value);
+        }
+        if (prioridadId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.PrioridadId == prioridadId.Value));
+        }
+        if (unidadEjecutoraId.HasValue)
+        {
+            query = query.Where(s => s.UnidadEjecutoraId == unidadEjecutoraId.Value);
+        }
+        if (fechaDesde.HasValue)
+        {
+            query = query.Where(s => s.FechaRegistro >= fechaDesde.Value.Date);
+        }
+        if (fechaHasta.HasValue)
+        {
+            var hastaExclusive = fechaHasta.Value.Date.AddDays(1);
+            query = query.Where(s => s.FechaRegistro < hastaExclusive);
         }
 
         var filas = await query
@@ -63,10 +86,21 @@ public class DashboardController(ApplicationDbContext db) : Controller
         {
             FiltroAduanaId = aduanaId,
             FiltroComponenteId = componenteId,
+            FiltroEstadoId = estadoId,
+            FiltroPrioridadId = prioridadId,
+            FiltroUnidadEjecutoraId = unidadEjecutoraId,
+            FiltroFechaDesde = fechaDesde,
+            FiltroFechaHasta = fechaHasta,
             AduanaOptions = await db.Aduanas.OrderBy(a => a.Orden)
                 .Select(a => new OpcionCatalogo(a.Id, a.Codigo + " - " + a.Nombre)).ToListAsync(),
             ComponenteOptions = await db.Componentes.OrderBy(c => c.Orden)
                 .Select(c => new OpcionCatalogo(c.Id, c.Nombre)).ToListAsync(),
+            EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden)
+                .Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
+            PrioridadOptions = await db.Prioridades.OrderBy(p => p.Orden)
+                .Select(p => new OpcionCatalogo(p.Id, p.Nombre)).ToListAsync(),
+            UnidadEjecutoraOptions = await db.UnidadesEjecutoras.OrderBy(u => u.Orden)
+                .Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync(),
             UltimaSolicitudFecha = filas.Count > 0 ? filas.Max(f => f.FechaRegistro) : null,
             Total = filas.Count,
         };
@@ -120,8 +154,9 @@ public class DashboardController(ApplicationDbContext db) : Controller
         vm.PorComponenteLabels = porComponente.Select(g => g.Key).ToList();
         vm.PorComponenteValores = porComponente.Select(g => g.Count()).ToList();
 
-        var desde = DateTime.UtcNow.Date.AddDays(-13);
-        for (var dia = desde; dia <= DateTime.UtcNow.Date; dia = dia.AddDays(1))
+        var tendenciaHasta = fechaHasta?.Date ?? DateTime.UtcNow.Date;
+        var tendenciaDesde = fechaDesde?.Date ?? tendenciaHasta.AddDays(-13);
+        for (var dia = tendenciaDesde; dia <= tendenciaHasta; dia = dia.AddDays(1))
         {
             vm.TendenciaLabels.Add(dia.ToString("dd MMM"));
             vm.TendenciaValores.Add(filas.Count(f => f.FechaRegistro.Date == dia));

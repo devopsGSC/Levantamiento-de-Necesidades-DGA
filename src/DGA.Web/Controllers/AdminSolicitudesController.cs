@@ -21,7 +21,11 @@ public class AdminSolicitudesController(
     private int UsuarioIdActual => int.Parse(userManager.GetUserId(User)!);
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(string? busqueda, byte? estado, int pagina = 1)
+    public async Task<IActionResult> Index(
+        string? busqueda, byte? estado, byte? tipoAduanaId, int? aduanaId,
+        byte? componenteId, int? subcomponenteId, int? elementoId,
+        byte? prioridadId, byte? unidadEjecutoraId,
+        DateTime? fechaDesde, DateTime? fechaHasta, int pagina = 1)
     {
         var query = db.Solicitudes.Where(s => !s.IsDeleted);
 
@@ -32,6 +36,43 @@ public class AdminSolicitudesController(
         if (estado.HasValue)
         {
             query = query.Where(s => s.EstadoId == estado.Value);
+        }
+        if (tipoAduanaId.HasValue)
+        {
+            query = query.Where(s => s.Aduana.TipoAduanaId == tipoAduanaId.Value);
+        }
+        if (aduanaId.HasValue)
+        {
+            query = query.Where(s => s.AduanaId == aduanaId.Value);
+        }
+        if (unidadEjecutoraId.HasValue)
+        {
+            query = query.Where(s => s.UnidadEjecutoraId == unidadEjecutoraId.Value);
+        }
+        if (componenteId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.ComponenteId == componenteId.Value));
+        }
+        if (subcomponenteId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.SubcomponenteId == subcomponenteId.Value));
+        }
+        if (elementoId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.ElementoId == elementoId.Value));
+        }
+        if (prioridadId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.PrioridadId == prioridadId.Value));
+        }
+        if (fechaDesde.HasValue)
+        {
+            query = query.Where(s => s.FechaRegistro >= fechaDesde.Value.Date);
+        }
+        if (fechaHasta.HasValue)
+        {
+            var hastaExclusive = fechaHasta.Value.Date.AddDays(1);
+            query = query.Where(s => s.FechaRegistro < hastaExclusive);
         }
 
         var total = await query.CountAsync();
@@ -47,6 +88,8 @@ public class AdminSolicitudesController(
                 Id = s.Id,
                 IdSolicitud = s.IdSolicitud,
                 Estado = s.Estado.Nombre,
+                Aduana = s.Aduana.Codigo + " - " + s.Aduana.Nombre,
+                FechaRegistro = s.FechaRegistro,
                 Componente = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Componente.Nombre).FirstOrDefault() ?? "-",
                 Elemento = s.Items.OrderBy(i => i.NumeroItem)
                     .Select(i => i.Elemento != null ? i.Elemento.Nombre : i.ElementoLibre)
@@ -60,10 +103,32 @@ public class AdminSolicitudesController(
             Solicitudes = solicitudes,
             Busqueda = busqueda,
             EstadoFiltro = estado,
+            TipoAduanaFiltro = tipoAduanaId,
+            AduanaFiltro = aduanaId,
+            ComponenteFiltro = componenteId,
+            SubcomponenteFiltro = subcomponenteId,
+            ElementoFiltro = elementoId,
+            PrioridadFiltro = prioridadId,
+            UnidadEjecutoraFiltro = unidadEjecutoraId,
+            FechaDesde = fechaDesde,
+            FechaHasta = fechaHasta,
             PaginaActual = pagina,
             TotalPaginas = totalPaginas,
             TotalResultados = total,
             EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
+            TipoAduanaOptions = await db.TiposAduana.OrderBy(t => t.Orden).Select(t => new OpcionCatalogo(t.Id, t.Nombre)).ToListAsync(),
+            AduanaOptions = await db.Aduanas
+                .Where(a => !tipoAduanaId.HasValue || a.TipoAduanaId == tipoAduanaId.Value)
+                .OrderBy(a => a.Orden).Select(a => new OpcionCatalogo(a.Id, a.Codigo + " - " + a.Nombre)).ToListAsync(),
+            ComponenteOptions = await db.Componentes.OrderBy(c => c.Orden).Select(c => new OpcionCatalogo(c.Id, c.Nombre)).ToListAsync(),
+            SubcomponenteOptions = componenteId.HasValue
+                ? await db.Subcomponentes.Where(s => s.ComponenteId == componenteId.Value).OrderBy(s => s.Orden).Select(s => new OpcionCatalogo(s.Id, s.Nombre)).ToListAsync()
+                : new(),
+            ElementoOptions = subcomponenteId.HasValue
+                ? await db.Elementos.Where(e => e.SubcomponenteId == subcomponenteId.Value).OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync()
+                : new(),
+            PrioridadOptions = await db.Prioridades.OrderBy(p => p.Orden).Select(p => new OpcionCatalogo(p.Id, p.Nombre)).ToListAsync(),
+            UnidadEjecutoraOptions = await db.UnidadesEjecutoras.OrderBy(u => u.Orden).Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync(),
         };
         return View(vm);
     }
@@ -99,6 +164,7 @@ public class AdminSolicitudesController(
             NombreResponsable = solicitud.NombreResponsable,
             Cargo = solicitud.Cargo?.Nombre,
             UnidadEjecutora = solicitud.UnidadEjecutora?.Nombre,
+            UnidadEjecutoraId = solicitud.UnidadEjecutoraId,
             Aduana = $"{solicitud.Aduana.Codigo} - {solicitud.Aduana.Nombre}",
             TipoAduana = solicitud.Aduana.TipoAduana.Nombre,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -107,6 +173,8 @@ public class AdminSolicitudesController(
             FechaRevision = solicitud.FechaRevision,
             Progreso = solicitud.Progreso,
             EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
+            UnidadEjecutoraOptions = await db.UnidadesEjecutoras.Where(u => u.Activo || u.Id == solicitud.UnidadEjecutoraId)
+                .OrderBy(u => u.Orden).Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync(),
             Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
             {
                 Id = i.Id,
@@ -149,9 +217,17 @@ public class AdminSolicitudesController(
             return NotFound();
         }
 
+        var unidadEjecutoraFinal = model.UnidadEjecutoraId ?? solicitud.UnidadEjecutoraId;
+        if (Estados.RequiereUnidadEjecutora(model.NuevoEstadoId) && !unidadEjecutoraFinal.HasValue)
+        {
+            TempData["Error"] = "Indicá la Unidad Ejecutora antes de aprobar la solicitud.";
+            return RedirectToAction(nameof(Details), new { id = model.SolicitudId });
+        }
+
         var estadoAnterior = solicitud.EstadoId;
         solicitud.EstadoId = model.NuevoEstadoId;
         solicitud.Progreso = Estados.ProgresoParaEstado(model.NuevoEstadoId);
+        solicitud.UnidadEjecutoraId = unidadEjecutoraFinal;
         solicitud.AdminRevisorId = UsuarioIdActual;
         solicitud.FechaRevision = DateTime.UtcNow;
         solicitud.UpdatedAt = DateTime.UtcNow;

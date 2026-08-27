@@ -6,8 +6,21 @@ public class DashboardViewModel
 
     public int? FiltroAduanaId { get; set; }
     public byte? FiltroComponenteId { get; set; }
+    public byte? FiltroEstadoId { get; set; }
+    public byte? FiltroPrioridadId { get; set; }
+    public byte? FiltroUnidadEjecutoraId { get; set; }
+    public DateTime? FiltroFechaDesde { get; set; }
+    public DateTime? FiltroFechaHasta { get; set; }
     public List<OpcionCatalogo> AduanaOptions { get; set; } = new();
     public List<OpcionCatalogo> ComponenteOptions { get; set; } = new();
+    public List<OpcionCatalogo> EstadoOptions { get; set; } = new();
+    public List<OpcionCatalogo> PrioridadOptions { get; set; } = new();
+    public List<OpcionCatalogo> UnidadEjecutoraOptions { get; set; } = new();
+
+    public bool TieneFiltrosActivos =>
+        FiltroAduanaId.HasValue || FiltroComponenteId.HasValue || FiltroEstadoId.HasValue ||
+        FiltroPrioridadId.HasValue || FiltroUnidadEjecutoraId.HasValue ||
+        FiltroFechaDesde.HasValue || FiltroFechaHasta.HasValue;
 
     public int Total { get; set; }
     public int Finalizadas { get; set; }

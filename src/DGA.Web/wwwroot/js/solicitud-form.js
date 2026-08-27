@@ -107,7 +107,6 @@
   const CAMPOS_OBLIGATORIOS_GENERAL = [
     { nombre: 'NombreResponsable', etiqueta: 'Nombre Solicitante' },
     { nombre: 'CargoId', etiqueta: 'Cargo' },
-    { nombre: 'UnidadEjecutoraId', etiqueta: 'Unidad Ejecutora' },
     { nombre: 'TipoAduanaId', etiqueta: 'Tipo de Aduana' },
     { nombre: 'AduanaId', etiqueta: 'Nombre de Aduana' },
     { nombre: 'JustificacionGeneral', etiqueta: 'Justificación General' },

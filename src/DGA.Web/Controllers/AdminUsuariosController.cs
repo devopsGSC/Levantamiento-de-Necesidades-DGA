@@ -107,9 +107,8 @@ public class AdminUsuariosController(
 
         await emailSender.SendAsync(
             model.Email,
-            "Credenciales de acceso — Levantamiento de Necesidades DGA",
-            $"Se creó una cuenta para vos en el Sistema de Levantamiento de Necesidades.<br/>" +
-            $"Correo: {model.Email}<br/>Contraseña temporal: <strong>{contrasenaTemporal}</strong>");
+            "Credenciales de acceso — Levantamiento de Necesidades",
+            ConstruirCuerpoCredenciales(model.Email, contrasenaTemporal, esNuevaCuenta: true));
 
         logger.LogInformation("Usuario creado por admin: {Email}", model.Email);
         TempData["Mensaje"] = $"Usuario {model.Email} creado. Se envió un correo con las credenciales.";
@@ -143,8 +142,13 @@ public class AdminUsuariosController(
         usuario.CredencialesReenviadasEn = DateTime.UtcNow;
         await userManager.UpdateAsync(usuario);
 
+        await emailSender.SendAsync(
+            usuario.Email!,
+            "Credenciales de acceso — Levantamiento de Necesidades",
+            ConstruirCuerpoCredenciales(usuario.Email!, nuevaContrasena, esNuevaCuenta: false));
+
         logger.LogInformation("Contraseña de {Email} cambiada manualmente por un admin.", usuario.Email);
-        TempData["Mensaje"] = $"Contraseña de {usuario.Email} actualizada.";
+        TempData["Mensaje"] = $"Contraseña de {usuario.Email} actualizada. Se envió un correo con las nuevas credenciales.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -298,9 +302,8 @@ public class AdminUsuariosController(
 
             await emailSender.SendAsync(
                 fila.Email,
-                "Credenciales de acceso — Levantamiento de Necesidades DGA",
-                $"Se creó una cuenta para vos en el Sistema de Levantamiento de Necesidades.<br/>" +
-                $"Correo: {fila.Email}<br/>Contraseña temporal: <strong>{contrasenaTemporal}</strong>");
+                "Credenciales de acceso — Levantamiento de Necesidades",
+                ConstruirCuerpoCredenciales(fila.Email, contrasenaTemporal, esNuevaCuenta: true));
 
             resultado.Creados.Add(fila.Email);
         }
@@ -310,6 +313,52 @@ public class AdminUsuariosController(
             (await userManager.GetUserAsync(User))?.Email, resultado.Creados.Count, resultado.Errores.Count);
 
         return View("CargaMasivaResultado", resultado);
+    }
+
+    private const string EnlaceSistema = "https://centrodesolicitudes.gcslatam.com/";
+
+    private static string ConstruirCuerpoCredenciales(string email, string contrasena, bool esNuevaCuenta)
+    {
+        var intro = esNuevaCuenta
+            ? "Se ha creado una cuenta a su nombre en el Sistema de Levantamiento de Necesidades."
+            : "Se ha actualizado la contraseña de su cuenta en el Sistema de Levantamiento de Necesidades.";
+        var etiquetaContrasena = esNuevaCuenta ? "Contraseña temporal" : "Contraseña nueva";
+
+        return $"""
+            <div style="background:#f4f5f7;padding:32px 16px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+                <tr>
+                  <td style="background:#2563EB;padding:20px 32px;">
+                    <span style="color:#ffffff;font-size:16px;font-weight:600;">Global Customs Solutions</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:32px;color:#1f2937;font-size:14px;line-height:1.6;">
+                    <p style="margin:0 0 16px;">{intro}</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#DBEAFE;border-radius:6px;margin:0 0 20px;">
+                      <tr>
+                        <td style="padding:16px 20px;">
+                          <p style="margin:0 0 6px;color:#1D4ED8;font-size:12px;text-transform:uppercase;letter-spacing:.04em;">Correo</p>
+                          <p style="margin:0 0 14px;font-size:15px;font-weight:600;">{email}</p>
+                          <p style="margin:0 0 6px;color:#1D4ED8;font-size:12px;text-transform:uppercase;letter-spacing:.04em;">{etiquetaContrasena}</p>
+                          <p style="margin:0;font-size:15px;font-weight:600;font-family:Consolas,Menlo,monospace;">{contrasena}</p>
+                        </td>
+                      </tr>
+                    </table>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                      <tr>
+                        <td style="border-radius:6px;background:#2563EB;">
+                          <a href="{EnlaceSistema}" style="display:inline-block;padding:12px 24px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">Ingresar al sistema</a>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin:0 0 8px;color:#4b5563;">Por seguridad, le recomendamos iniciar sesión y cambiar esta contraseña lo antes posible.</p>
+                    <p style="margin:0;color:#6b7280;font-size:12.5px;">Si no esperaba este correo, comuníquese con un administrador del sistema.</p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            """;
     }
 
     private static string? ValidarFila(FilaCargaMasivaUsuario fila, HashSet<string> correosEnArchivo)

@@ -16,7 +16,14 @@ public class SmtpEmailSender(IOptions<SmtpOptions> options, ILogger<SmtpEmailSen
         message.From.Add(new MailboxAddress(smtp.FromDisplayName, smtp.From));
         message.To.Add(MailboxAddress.Parse(toEmail));
         message.Subject = subject;
-        message.Body = new TextPart("html") { Text = htmlBody };
+
+        var builder = new BodyBuilder { HtmlBody = htmlBody };
+        if (htmlBody.Contains($"cid:{CredencialesEmailTemplate.LogoContentId}"))
+        {
+            var logo = builder.LinkedResources.Add(CredencialesEmailTemplate.LogoContentId + ".png", CredencialesEmailTemplate.LogoBytes);
+            logo.ContentId = CredencialesEmailTemplate.LogoContentId;
+        }
+        message.Body = builder.ToMessageBody();
 
         using var client = new SmtpClient();
         try

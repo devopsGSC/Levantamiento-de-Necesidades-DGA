@@ -52,7 +52,12 @@ public class AdminUsuariosController(
             });
         }
 
-        return View(new AdminUsuarioIndexViewModel { Usuarios = usuarios, Busqueda = busqueda });
+        var model = new AdminUsuarioIndexViewModel { Usuarios = usuarios, Busqueda = busqueda };
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_TablaUsuarios", model);
+        }
+        return View(model);
     }
 
     [HttpGet("Crear")]

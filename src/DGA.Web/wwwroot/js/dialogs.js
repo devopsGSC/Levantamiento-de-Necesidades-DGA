@@ -56,22 +56,27 @@
     // Cualquier <form data-confirm="mensaje"> se intercepta automáticamente:
     // muestra el modal y recién ahí envía el form (form.submit() no vuelve a
     // disparar 'submit', así que no hay riesgo de loop).
-    document.querySelectorAll('form[data-confirm]').forEach(function (form) {
-      form.addEventListener('submit', function (e) {
-        if (form.dataset.confirmado === 'true') {
-          return;
-        }
-        e.preventDefault();
-        window.dgaConfirm(form.dataset.confirm, { peligroso: form.dataset.confirmPeligroso === 'true' })
-          .then(function (ok) {
-            if (ok) {
-              form.dataset.confirmado = 'true';
-              window.dgaFormEnviando?.(form);
-              form.submit();
-            }
-          });
+    // Expuesta como función reutilizable para poder cablear formularios que se
+    // inyectan más tarde (ej. una tabla que se refresca por AJAX).
+    window.dgaWireConfirmForms = function (root) {
+      (root || document).querySelectorAll('form[data-confirm]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+          if (form.dataset.confirmado === 'true') {
+            return;
+          }
+          e.preventDefault();
+          window.dgaConfirm(form.dataset.confirm, { peligroso: form.dataset.confirmPeligroso === 'true' })
+            .then(function (ok) {
+              if (ok) {
+                form.dataset.confirmado = 'true';
+                window.dgaFormEnviando?.(form);
+                form.submit();
+              }
+            });
+        });
       });
-    });
+    };
+    window.dgaWireConfirmForms(document);
   }
 
   // ---------------------------------------------------------------

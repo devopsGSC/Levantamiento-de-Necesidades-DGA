@@ -17,84 +17,17 @@
                 <a asp-action="Crear" class="btn btn-primary">Crear Nuevo Usuario</a>
             </div>
         </div>
-        <form method="get">
-            <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar usuario..." style="max-width:320px;" />
-        </form>
     </div>
 
-    <div class="card">
-        <div class="data-table-wrap">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Usuario</th><th>Rol</th><th>Cargo</th><th>Aduana</th><th>Subdirección</th><th>Departamento/Unidad</th><th>Estado</th><th>Fecha Creación</th><th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Usuarios.Count == 0)
-                    {
-                        <tr><td colspan="9" style="text-align:center;color:var(--dga-muted);padding:28px;">No se encontraron usuarios.</td></tr>
-                    }
-                    else
-                    {
-                        foreach (var u in Model.Usuarios)
-                        {
-                            <tr>
-                                <td>
-                                    <div style="font-weight:600;">@u.Nombre</div>
-                                    <div style="color:var(--dga-muted);font-size:12.5px;">@u.Email</div>
-                                </td>
-                                <td>
-                                    @if (u.RolEditable)
-                                    {
-                                        <form asp-action="CambiarRol" asp-route-id="@u.Id" method="post" class="js-form-cambiar-rol" data-email="@u.Email">
-                                            <select name="nuevoRol" class="status-select">
-                                                <option value="Usuario" selected="@(u.Rol == "Usuario")">Usuario</option>
-                                                <option value="Administrador" selected="@(u.Rol == "Administrador")">Administrador</option>
-                                            </select>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <span>@u.Rol</span>
-                                    }
-                                    @if (u.EsAdminPrincipal)
-                                    {
-                                        <div><span class="status-badge" style="margin-top:4px;font-size:10.5px;">Principal</span></div>
-                                    }
-                                    else if (!u.RolEditable)
-                                    {
-                                        <div style="color:var(--dga-muted);font-size:11px;margin-top:4px;">
-                                            @(u.EsFilaPropia ? "Tu propio usuario" : "Solo el admin principal puede cambiarlo")
-                                        </div>
-                                    }
-                                </td>
-                                <td>@(u.Cargo ?? "-")</td>
-                                <td>@(u.Aduana ?? "-")</td>
-                                <td>@(u.Subdireccion ?? "-")</td>
-                                <td>@(u.Departamento ?? "-")</td>
-                                <td><span class="status-badge @(u.Activo ? "is-success" : "is-danger")">@(u.Activo ? "Activo" : "Inactivo")</span></td>
-                                <td>@u.CreatedAt.ASalvador().ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                        <button type="button" class="btn btn-outline btn-sm"
-                                                data-abrir-modal-contrasena data-id="@u.Id" data-email="@u.Email">
-                                            Cambiar Contraseña
-                                        </button>
-                                        <form asp-action="CambiarActivo" asp-route-id="@u.Id" asp-route-activo="@(!u.Activo)" method="post"
-                                              data-confirm="¿@(u.Activo ? "Desactivar" : "Reactivar") a @u.Email?">
-                                            <button type="submit" class="btn btn-outline btn-sm" style="color:@(u.Activo ? "var(--dga-danger)" : "var(--dga-success)");">
-                                                @(u.Activo ? "Desactivar" : "Reactivar")
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+    <form method="get" id="form-buscar-usuarios" class="filters-bar">
+        <div class="field" style="max-width:320px;">
+            <label>Buscar</label>
+            <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre o correo del usuario..." />
         </div>
+    </form>
+
+    <div id="usuarios-resultado">
+        <partial name="_TablaUsuarios" model="Model" />
     </div>
 </div>
 
@@ -133,17 +66,6 @@
             var nueva = document.getElementById('cc-nueva');
             var confirmar = document.getElementById('cc-confirmar');
 
-            document.querySelectorAll('[data-abrir-modal-contrasena]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    inputId.value = btn.dataset.id;
-                    email.textContent = btn.dataset.email;
-                    nueva.value = '';
-                    confirmar.value = '';
-                    modal.hidden = false;
-                    nueva.focus();
-                });
-            });
-
             document.getElementById('cc-cerrar').addEventListener('click', function () {
                 modal.hidden = true;
             });
@@ -155,22 +77,91 @@
                 }
             });
 
-            // El mensaje de confirmación depende de qué rol se elige, así que no
-            // se puede armar con un atributo data-confirm estático: se pide la
-            // confirmación acá mismo y recién después se envía el form.
-            document.querySelectorAll('.js-form-cambiar-rol').forEach(function (form) {
-                var select = form.querySelector('select');
-                var valorAnterior = select.value;
-                select.addEventListener('change', function () {
-                    var nuevoTexto = select.selectedOptions[0].text;
-                    dgaConfirm('¿Cambiar el rol de ' + form.dataset.email + ' a ' + nuevoTexto + '?').then(function (ok) {
-                        if (ok) {
-                            form.submit();
-                        } else {
-                            select.value = valorAnterior;
-                        }
+            // Vuelve a cablear los botones/forms de cada fila de la tabla — se llama
+            // tanto al cargar la página como después de reemplazar el resultado por
+            // AJAX (búsqueda en vivo), porque las filas nuevas son nodos del DOM
+            // sin ningún listener todavía.
+            function wireFilas(root) {
+                root.querySelectorAll('[data-abrir-modal-contrasena]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        inputId.value = btn.dataset.id;
+                        email.textContent = btn.dataset.email;
+                        nueva.value = '';
+                        confirmar.value = '';
+                        modal.hidden = false;
+                        nueva.focus();
                     });
                 });
+
+                // El mensaje de confirmación depende de qué rol se elige, así que no
+                // se puede armar con un atributo data-confirm estático: se pide la
+                // confirmación acá mismo y recién después se envía el form.
+                root.querySelectorAll('.js-form-cambiar-rol').forEach(function (form) {
+                    var select = form.querySelector('select');
+                    var valorAnterior = select.value;
+                    select.addEventListener('change', function () {
+                        var nuevoTexto = select.selectedOptions[0].text;
+                        dgaConfirm('¿Cambiar el rol de ' + form.dataset.email + ' a ' + nuevoTexto + '?').then(function (ok) {
+                            if (ok) {
+                                form.submit();
+                            } else {
+                                select.value = valorAnterior;
+                            }
+                        });
+                    });
+                });
+
+                window.dgaWireConfirmForms(root);
+            }
+            wireFilas(document);
+
+            // ---------------------------------------------------------------
+            // Búsqueda en vivo — filtra a medida que se escribe, sin recargar la
+            // página. El form sigue funcionando igual con JS desactivado (GET
+            // normal), acá solo interceptamos submit/input para pedir el mismo
+            // resultado por AJAX y reemplazar la tabla.
+            // ---------------------------------------------------------------
+
+            var form = document.getElementById('form-buscar-usuarios');
+            var input = form.querySelector('input[name="busqueda"]');
+            var resultado = document.getElementById('usuarios-resultado');
+            var debounceTimer = null;
+            var peticionActual = null;
+
+            async function buscar(termino) {
+                if (peticionActual) peticionActual.abort();
+                var controlador = new AbortController();
+                peticionActual = controlador;
+
+                var url = new URL(location.pathname, location.origin);
+                if (termino) url.searchParams.set('busqueda', termino);
+
+                try {
+                    var resp = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: controlador.signal,
+                    });
+                    var html = await resp.text();
+                    if (controlador.signal.aborted) return;
+                    resultado.innerHTML = html;
+                    wireFilas(resultado);
+                    history.replaceState(null, '', url);
+                } catch (e) {
+                    if (e.name !== 'AbortError') throw e;
+                } finally {
+                    if (peticionActual === controlador) peticionActual = null;
+                }
+            }
+
+            input.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () { buscar(input.value.trim()); }, 350);
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                buscar(input.value.trim());
             });
         })();
     </script>

@@ -86,6 +86,10 @@ a:hover { color: var(--dga-accent-dark); text-decoration: underline; }
   margin: 0 auto;
   padding: 0 24px;
 }
+/* Variante más ancha para listados con muchas columnas (ej. Directorio de
+   Usuarios) que con el ancho normal quedan apretados y fuerzan scroll
+   horizontal aunque la pantalla tenga lugar de sobra. */
+.container-page--wide { max-width: 1600px; }
 
 @media (max-width: 480px) {
   .container-page { padding: 0 14px; }

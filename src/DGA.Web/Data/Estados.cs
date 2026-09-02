@@ -41,4 +41,22 @@ public static class Estados
     /// <summary>La Unidad Ejecutora la define el administrador recién al aprobar la
     /// solicitud — es el análisis que determina quién la va a tramitar.</summary>
     public static bool RequiereUnidadEjecutora(byte estadoId) => estadoId == Aprobado;
+
+    /// <summary>
+    /// Guardado Borrador y Solicitado los pone el propio usuario (al guardar o finalizar
+    /// su solicitud), no el admin. El admin solo puede mover la solicitud hacia estos.
+    /// </summary>
+    public static bool PuedeEstablecerAdmin(byte estadoId) => estadoId is Aprobado or Denegado or EnProceso or Finalizado;
+
+    /// <summary>
+    /// Único paso hacia adelante que puede dar el usuario de un rol delegado (Compras DGA,
+    /// Mantenimiento DGA, Otro) sobre una solicitud que el admin ya le asignó. Nunca puede
+    /// aprobar, denegar ni reasignar Unidad Ejecutora — eso es exclusivo del admin.
+    /// </summary>
+    public static byte? SiguienteEstadoDelegado(byte estadoId) => estadoId switch
+    {
+        Aprobado => EnProceso,
+        EnProceso => Finalizado,
+        _ => null,
+    };
 }

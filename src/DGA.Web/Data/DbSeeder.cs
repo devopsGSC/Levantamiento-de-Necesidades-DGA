@@ -28,6 +28,13 @@ public static class DbSeeder
         {
             await roleManager.CreateAsync(new ApplicationRole(Roles.Usuario));
         }
+        foreach (var rolDelegado in Roles.Delegados)
+        {
+            if (!await roleManager.RoleExistsAsync(rolDelegado))
+            {
+                await roleManager.CreateAsync(new ApplicationRole(rolDelegado));
+            }
+        }
 
         var yaHayAdmin = await userManager.GetUsersInRoleAsync(Roles.Administrador);
         if (yaHayAdmin.Count > 0)

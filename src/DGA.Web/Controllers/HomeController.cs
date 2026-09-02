@@ -15,6 +15,11 @@ public class HomeController(ApplicationDbContext db, UserManager<ApplicationUser
 
     public async Task<IActionResult> Index()
     {
+        if (Roles.EsRolDelegado(User))
+        {
+            return RedirectToAction("Index", "MisRequerimientos");
+        }
+
         var esAdmin = User.IsInRole(Roles.Administrador);
         var usuarioId = int.Parse(userManager.GetUserId(User)!);
 

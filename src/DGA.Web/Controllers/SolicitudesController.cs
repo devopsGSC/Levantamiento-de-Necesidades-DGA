@@ -5,6 +5,8 @@ using DGA.Web.Models;
 using DGA.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace DGA.Web.Controllers;
@@ -25,6 +27,21 @@ public class SolicitudesController(
 
     private int UsuarioIdActual => int.Parse(userManager.GetUserId(User)!);
     private bool EsAdmin => User.IsInRole(Roles.Administrador);
+
+    // Este controlador es para armar/gestionar solicitudes propias — no es lo que ven los
+    // roles delegados (Compras DGA, Mantenimiento DGA, Otro), que solo tienen su propia
+    // pantalla de "Mis Requerimientos" con lo que el admin les asignó. La única excepción es
+    // Foto/Cotizacion: ahí sí necesitan poder ver los adjuntos de las solicitudes que les caen.
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        var accion = (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName;
+        if (Roles.EsRolDelegado(User) && accion is not (nameof(Foto) or nameof(Cotizacion)))
+        {
+            context.Result = RedirectToAction("Index", "MisRequerimientos");
+            return;
+        }
+        base.OnActionExecuting(context);
+    }
 
     // ------------------------------------------------------------------
     // Listado — "Mis Solicitudes" (siempre las propias, sin importar el rol)
@@ -531,7 +548,9 @@ public class SolicitudesController(
         {
             return NotFound();
         }
-        if (foto.SolicitudItem.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin)
+        var unidadDelegado = Roles.UnidadEjecutoraDelRolDelegado(User);
+        var esDelegadoConAcceso = unidadDelegado.HasValue && foto.SolicitudItem.Solicitud.UnidadEjecutoraId == unidadDelegado;
+        if (foto.SolicitudItem.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin && !esDelegadoConAcceso)
         {
             return Forbid();
         }
@@ -593,7 +612,9 @@ public class SolicitudesController(
         {
             return NotFound();
         }
-        if (item.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin)
+        var unidadDelegado = Roles.UnidadEjecutoraDelRolDelegado(User);
+        var esDelegadoConAcceso = unidadDelegado.HasValue && item.Solicitud.UnidadEjecutoraId == unidadDelegado;
+        if (item.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin && !esDelegadoConAcceso)
         {
             return Forbid();
         }

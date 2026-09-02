@@ -172,7 +172,9 @@ public class AdminSolicitudesController(
             FechaRegistro = solicitud.FechaRegistro,
             FechaRevision = solicitud.FechaRevision,
             Progreso = solicitud.Progreso,
-            EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
+            EstadoOptions = await db.EstadosSolicitud
+                .Where(e => e.Id == solicitud.EstadoId || (e.Id == Estados.Aprobado || e.Id == Estados.Denegado || e.Id == Estados.EnProceso || e.Id == Estados.Finalizado))
+                .OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
             UnidadEjecutoraOptions = await db.UnidadesEjecutoras.Where(u => u.Activo || u.Id == solicitud.UnidadEjecutoraId)
                 .OrderBy(u => u.Orden).Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync(),
             Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
@@ -215,6 +217,17 @@ public class AdminSolicitudesController(
         if (solicitud is null)
         {
             return NotFound();
+        }
+
+        if (!Estados.PuedeEstablecerAdmin(model.NuevoEstadoId))
+        {
+            TempData["Error"] = "Ese estado no se puede asignar manualmente.";
+            return RedirectToAction(nameof(Details), new { id = model.SolicitudId });
+        }
+        if (model.NuevoEstadoId == solicitud.EstadoId)
+        {
+            TempData["Error"] = "La solicitud ya está en ese estado.";
+            return RedirectToAction(nameof(Details), new { id = model.SolicitudId });
         }
 
         var unidadEjecutoraFinal = model.UnidadEjecutoraId ?? solicitud.UnidadEjecutoraId;

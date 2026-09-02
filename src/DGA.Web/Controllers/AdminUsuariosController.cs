@@ -67,7 +67,7 @@ public class AdminUsuariosController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Crear(CrearUsuarioViewModel model)
     {
-        if (model.Rol != Roles.Administrador && model.Rol != Roles.Usuario)
+        if (!Roles.Todos.Contains(model.Rol))
         {
             ModelState.AddModelError(nameof(model.Rol), "Rol inválido.");
         }
@@ -161,7 +161,7 @@ public class AdminUsuariosController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CambiarRol(int id, string nuevoRol)
     {
-        if (nuevoRol != Roles.Administrador && nuevoRol != Roles.Usuario)
+        if (!Roles.Todos.Contains(nuevoRol))
         {
             TempData["Error"] = "Rol inválido.";
             return RedirectToAction(nameof(Index));

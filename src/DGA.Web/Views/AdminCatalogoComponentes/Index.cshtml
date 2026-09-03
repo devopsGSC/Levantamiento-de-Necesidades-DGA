@@ -30,7 +30,7 @@
                         <span class="status-badge is-danger" style="margin-left:8px;">Inactivo</span>
                     }
                 </span>
-                <span style="display:flex;gap:8px;" onclick="event.preventDefault()">
+                <span style="display:flex;gap:8px;" onclick="event.stopPropagation()">
                     <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
                             data-action="/Admin/Configuracion/Componentes/@componente.Id/Editar" data-nombre="@componente.Nombre" data-titulo="Editar Componente">Editar</button>
                     <form method="post" action="/Admin/Configuracion/Componentes/@componente.Id/Activo"
@@ -63,7 +63,7 @@
                                     <span class="status-badge is-danger" style="margin-left:8px;">Inactivo</span>
                                 }
                             </span>
-                            <span style="display:flex;gap:8px;" onclick="event.preventDefault()">
+                            <span style="display:flex;gap:8px;" onclick="event.stopPropagation()">
                                 <button type="button" class="btn btn-outline btn-sm js-editar-nombre"
                                         data-action="/Admin/Configuracion/Componentes/Subcomponentes/@sub.Id/Editar" data-nombre="@sub.Nombre" data-titulo="Editar Subcomponente">Editar</button>
                                 <form method="post" action="/Admin/Configuracion/Componentes/Subcomponentes/@sub.Id/Activo"

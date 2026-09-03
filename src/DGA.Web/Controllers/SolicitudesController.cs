@@ -19,6 +19,8 @@ public class SolicitudesController(
     SolicitudExportService exportService,
     ILogger<SolicitudesController> logger) : Controller
 {
+    private const int PorPagina = 10;
+
     private static readonly JsonSerializerOptions JsonOpciones = new() { PropertyNameCaseInsensitive = true };
 
     // El JS del formulario trabaja siempre en camelCase (numeroItem, componenteNombre, etc.) —
@@ -47,7 +49,7 @@ public class SolicitudesController(
     // Listado — "Mis Solicitudes" (siempre las propias, sin importar el rol)
     // ------------------------------------------------------------------
 
-    public async Task<IActionResult> Index(string? busqueda, byte? estado)
+    public async Task<IActionResult> Index(string? busqueda, byte? estado, int pagina = 1)
     {
         var query = db.Solicitudes
             .Where(s => !s.IsDeleted && s.UsuarioId == UsuarioIdActual);
@@ -61,8 +63,14 @@ public class SolicitudesController(
             query = query.Where(s => s.EstadoId == estado.Value);
         }
 
+        var total = await query.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)PorPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
         var solicitudes = await query
             .OrderByDescending(s => s.FechaRegistro)
+            .Skip((pagina - 1) * PorPagina)
+            .Take(PorPagina)
             .Select(s => new SolicitudListItemViewModel
             {
                 Id = s.Id,
@@ -83,6 +91,9 @@ public class SolicitudesController(
             EstadoFiltro = estado,
             EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden)
                 .Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
+            PaginaActual = pagina,
+            TotalPaginas = totalPaginas,
+            TotalResultados = total,
         };
         return View(vm);
     }

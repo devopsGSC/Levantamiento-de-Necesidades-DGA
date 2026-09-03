@@ -18,6 +18,8 @@ namespace DGA.Web.Controllers;
 [Route("MisRequerimientos")]
 public class MisRequerimientosController(ApplicationDbContext db, UserManager<ApplicationUser> userManager) : Controller
 {
+    private const int PorPagina = 10;
+
     private int UsuarioIdActual => int.Parse(userManager.GetUserId(User)!);
 
     // La pertenencia a exactamente uno de los 3 roles delegados ya la exige el [Authorize]
@@ -25,7 +27,7 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
     private byte UnidadEjecutoraIdActual => Roles.UnidadEjecutoraDelRolDelegado(User)!.Value;
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(string? busqueda, byte? estado)
+    public async Task<IActionResult> Index(string? busqueda, byte? estado, int pagina = 1)
     {
         var unidadId = UnidadEjecutoraIdActual;
         var query = db.Solicitudes.Where(s => !s.IsDeleted && s.UnidadEjecutoraId == unidadId
@@ -40,8 +42,14 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
             query = query.Where(s => s.EstadoId == estado.Value);
         }
 
+        var total = await query.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)PorPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
         var solicitudes = await query
             .OrderByDescending(s => s.FechaRevision)
+            .Skip((pagina - 1) * PorPagina)
+            .Take(PorPagina)
             .Select(s => new MisRequerimientoListItemViewModel
             {
                 Id = s.Id,
@@ -63,6 +71,9 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
             EstadoOptions = await db.EstadosSolicitud
                 .Where(e => e.Id == Estados.Aprobado || e.Id == Estados.EnProceso || e.Id == Estados.Finalizado)
                 .OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
+            PaginaActual = pagina,
+            TotalPaginas = totalPaginas,
+            TotalResultados = total,
         };
         return View(vm);
     }

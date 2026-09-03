@@ -77,5 +77,6 @@
                 </tbody>
             </table>
         }
+        <partial name="_Paginacion" model="@(new PaginacionViewModel { PaginaActual = Model.PaginaActual, TotalPaginas = Model.TotalPaginas, TotalResultados = Model.TotalResultados })" />
     </div>
 </div>

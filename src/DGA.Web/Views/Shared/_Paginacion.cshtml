@@ -1,0 +1,54 @@
+@using Microsoft.AspNetCore.Http
+@model PaginacionViewModel
+@{
+    string UrlPagina(int pagina)
+    {
+        var valores = Context.Request.Query
+            .Where(kv => !string.Equals(kv.Key, "pagina", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+        valores["pagina"] = pagina.ToString();
+        return Context.Request.Path + QueryString.Create(valores);
+    }
+
+    var actual = Model.PaginaActual;
+    var total = Math.Max(Model.TotalPaginas, 1);
+
+    // Ventana de números visibles: siempre primera y última página, más las
+    // vecinas a la actual — el resto se colapsa con "…" para no romper el
+    // layout cuando hay muchas páginas.
+    var numeros = new List<int?>();
+    if (total <= 7)
+    {
+        for (var i = 1; i <= total; i++) numeros.Add(i);
+    }
+    else
+    {
+        numeros.Add(1);
+        if (actual > 3) numeros.Add(null);
+        for (var i = Math.Max(2, actual - 1); i <= Math.Min(total - 1, actual + 1); i++) numeros.Add(i);
+        if (actual < total - 2) numeros.Add(null);
+        numeros.Add(total);
+    }
+}
+<div class="pagination">
+    <span>Mostrando página @actual de @total (@Model.TotalResultados resultados)</span>
+    <div class="pagination__paginas">
+        <a class="btn btn-outline btn-sm @(actual <= 1 ? "disabled" : "")" href="@UrlPagina(actual - 1)">Anterior</a>
+        @foreach (var n in numeros)
+        {
+            if (n is null)
+            {
+                <span class="pagination__ellipsis">…</span>
+            }
+            else if (n == actual)
+            {
+                <span class="btn btn-sm pagination__pagina-actual" aria-current="page">@n</span>
+            }
+            else
+            {
+                <a class="btn btn-outline btn-sm" href="@UrlPagina(n.Value)">@n</a>
+            }
+        }
+        <a class="btn btn-outline btn-sm @(actual >= total ? "disabled" : "")" href="@UrlPagina(actual + 1)">Siguiente</a>
+    </div>
+</div>

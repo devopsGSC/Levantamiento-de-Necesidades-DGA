@@ -1,21 +1,6 @@
-@using Microsoft.AspNetCore.Routing
 @model AdminSolicitudIndexViewModel
 @{
     ViewData["Title"] = "Panel de Administración — Solicitudes";
-    var rutaFiltros = new RouteValueDictionary
-    {
-        ["busqueda"] = Model.Busqueda,
-        ["estado"] = Model.EstadoFiltro,
-        ["tipoAduanaId"] = Model.TipoAduanaFiltro,
-        ["aduanaId"] = Model.AduanaFiltro,
-        ["componenteId"] = Model.ComponenteFiltro,
-        ["subcomponenteId"] = Model.SubcomponenteFiltro,
-        ["elementoId"] = Model.ElementoFiltro,
-        ["prioridadId"] = Model.PrioridadFiltro,
-        ["unidadEjecutoraId"] = Model.UnidadEjecutoraFiltro,
-        ["fechaDesde"] = Model.FechaDesde?.ToString("yyyy-MM-dd"),
-        ["fechaHasta"] = Model.FechaHasta?.ToString("yyyy-MM-dd"),
-    };
 }
 
 <div class="container-page">
@@ -179,22 +164,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="pagination">
-            <span>Mostrando página @Model.PaginaActual de @Model.TotalPaginas (@Model.TotalResultados resultados)</span>
-            <div style="display:flex;gap:8px;">
-                <a class="btn btn-outline btn-sm @(Model.PaginaActual <= 1 ? "disabled" : "")"
-                   href="@Url.Action("Index", MergePagina(rutaFiltros, Model.PaginaActual - 1))">Anterior</a>
-                <a class="btn btn-outline btn-sm @(Model.PaginaActual >= Model.TotalPaginas ? "disabled" : "")"
-                   href="@Url.Action("Index", MergePagina(rutaFiltros, Model.PaginaActual + 1))">Siguiente</a>
-            </div>
-        </div>
+        <partial name="_Paginacion" model="@(new PaginacionViewModel { PaginaActual = Model.PaginaActual, TotalPaginas = Model.TotalPaginas, TotalResultados = Model.TotalResultados })" />
     </div>
 </div>
-
-@functions {
-    private static RouteValueDictionary MergePagina(RouteValueDictionary filtros, int pagina)
-    {
-        var copia = new RouteValueDictionary(filtros) { ["pagina"] = pagina };
-        return copia;
-    }
-}

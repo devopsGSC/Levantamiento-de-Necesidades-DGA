@@ -863,7 +863,10 @@ table.data-table th {
 table.data-table td { padding: 12px 16px; border-bottom: 1px solid var(--dga-border); vertical-align: top; font-size: 13.5px; }
 table.data-table tr:last-child td { border-bottom: none; }
 
-.pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 13px; color: var(--dga-muted); }
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 13px; color: var(--dga-muted); flex-wrap: wrap; gap: 10px; }
+.pagination__paginas { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pagination__pagina-actual { background: var(--dga-accent); color: #fff; }
+.pagination__ellipsis { padding: 0 2px; color: var(--dga-muted); }
 
 .status-select {
   padding: 7px 10px; border: 1px solid var(--dga-border); border-radius: var(--dga-radius-sm);

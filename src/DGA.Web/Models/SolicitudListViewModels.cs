@@ -18,6 +18,10 @@ public class SolicitudIndexViewModel
     public string? Busqueda { get; set; }
     public byte? EstadoFiltro { get; set; }
     public List<OpcionCatalogo> EstadoOptions { get; set; } = new();
+
+    public int PaginaActual { get; set; } = 1;
+    public int TotalPaginas { get; set; } = 1;
+    public int TotalResultados { get; set; }
 }
 
 public class SolicitudDetailViewModel

@@ -7,6 +7,7 @@ public class AdminSolicitudListItemViewModel
     public string Componente { get; set; } = string.Empty;
     public string Elemento { get; set; } = string.Empty;
     public string Detalle { get; set; } = string.Empty;
+    public int CantidadItems { get; set; }
     public string Estado { get; set; } = string.Empty;
     public string Aduana { get; set; } = string.Empty;
     public DateTime FechaRegistro { get; set; }
@@ -56,8 +57,15 @@ public class AdminSolicitudDetailViewModel
     public string Estado { get; set; } = string.Empty;
     public string NombreResponsable { get; set; } = string.Empty;
     public string? Cargo { get; set; }
-    public string? UnidadEjecutora { get; set; }
-    public byte? UnidadEjecutoraId { get; set; }
+
+    /// <summary>Lista de nombres distintos de Unidad Ejecutora asignados entre los ítems de
+    /// la solicitud — ya no hay una única Unidad Ejecutora a nivel de solicitud.</summary>
+    public string UnidadesEjecutorasResumen { get; set; } = string.Empty;
+
+    /// <summary>Si la solicitud está en un estado donde se puede asignar Unidad Ejecutora y
+    /// marcar ítems como completados (Aprobada o En Proceso).</summary>
+    public bool PermiteGestionItems { get; set; }
+
     public string Aduana { get; set; } = string.Empty;
     public string TipoAduana { get; set; } = string.Empty;
     public string JustificacionGeneral { get; set; } = string.Empty;
@@ -65,6 +73,7 @@ public class AdminSolicitudDetailViewModel
     public DateTime FechaRegistro { get; set; }
     public DateTime? FechaRevision { get; set; }
     public byte? Progreso { get; set; }
+    public int ItemsCompletados => Items.Count(i => i.Completado);
 
     public List<SolicitudDetailItemViewModel> Items { get; set; } = new();
     public List<SolicitudHistorialItemViewModel> Historial { get; set; } = new();
@@ -79,6 +88,5 @@ public class CambiarEstadoViewModel
 {
     public int SolicitudId { get; set; }
     public byte NuevoEstadoId { get; set; }
-    public byte? UnidadEjecutoraId { get; set; }
     public string? Comentario { get; set; }
 }

@@ -78,6 +78,7 @@ public class SolicitudesController(
                 Estado = s.Estado.Nombre,
                 NombreResponsable = s.NombreResponsable,
                 FechaRegistro = s.FechaRegistro,
+                CantidadItems = s.Items.Count,
                 CantidadFotografias = s.Items.SelectMany(i => i.Fotografias).Count(),
                 EsEditable = Estados.EsEditablePorDueno(s.EstadoId),
                 PuedeDescartar = Estados.PuedeDescartar(s.EstadoId),
@@ -282,7 +283,9 @@ public class SolicitudesController(
         var estadoAnterior = solicitud.EstadoId;
         var finalizando = model.Accion == "finalizar";
         solicitud.EstadoId = finalizando ? Estados.Solicitado : Estados.GuardadoBorrador;
-        solicitud.Progreso = Estados.ProgresoParaEstado(solicitud.EstadoId);
+        // El set de ítems se reemplaza completo arriba (RemoveRange) — ningún ítem nuevo
+        // puede venir ya marcado Completado, así que el Progreso vuelve a 0.
+        solicitud.Progreso = 0;
 
         foreach (var item in items)
         {
@@ -392,15 +395,16 @@ public class SolicitudesController(
         var solicitud = await db.Solicitudes
             .Include(s => s.Aduana).ThenInclude(a => a.TipoAduana)
             .Include(s => s.Cargo)
-            .Include(s => s.UnidadEjecutora)
             .Include(s => s.Estado)
             .Include(s => s.Items).ThenInclude(i => i.Componente)
             .Include(s => s.Items).ThenInclude(i => i.Subcomponente)
             .Include(s => s.Items).ThenInclude(i => i.Elemento)
             .Include(s => s.Items).ThenInclude(i => i.Detalle)
             .Include(s => s.Items).ThenInclude(i => i.Fotografias)
+            .Include(s => s.Items).ThenInclude(i => i.UnidadEjecutora)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
+            .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
 
         if (solicitud is null || (solicitud.UsuarioId != UsuarioIdActual && !EsAdmin))
@@ -415,7 +419,6 @@ public class SolicitudesController(
             Estado = solicitud.Estado.Nombre,
             NombreResponsable = solicitud.NombreResponsable,
             Cargo = solicitud.Cargo?.Nombre,
-            UnidadEjecutora = solicitud.UnidadEjecutora?.Nombre,
             Aduana = $"{solicitud.Aduana.Codigo} - {solicitud.Aduana.Nombre}",
             TipoAduana = solicitud.Aduana.TipoAduana.Nombre,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -443,11 +446,16 @@ public class SolicitudesController(
                 UbicacionEspecifica = i.UbicacionEspecifica,
                 JustificacionItem = i.JustificacionItem,
                 Fotografias = i.Fotografias.Select(f => new SolicitudFotoViewModel { Id = f.Id, NombreOriginal = f.NombreOriginal }).ToList(),
+                UnidadEjecutora = i.UnidadEjecutora?.Nombre,
+                Completado = i.Completado,
+                FechaCompletado = i.FechaCompletado,
             }).ToList(),
             Historial = solicitud.Historial.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
                 EstadoAnterior = h.EstadoAnterior?.Nombre,
-                EstadoNuevo = h.EstadoNuevo.Nombre,
+                EstadoNuevo = h.EstadoNuevo?.Nombre,
+                NumeroItem = h.SolicitudItem != null ? h.SolicitudItem.NumeroItem : (int?)null,
+                ItemCompletado = h.ItemCompletado,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
             }).ToList(),
@@ -560,7 +568,7 @@ public class SolicitudesController(
             return NotFound();
         }
         var unidadDelegado = Roles.UnidadEjecutoraDelRolDelegado(User);
-        var esDelegadoConAcceso = unidadDelegado.HasValue && foto.SolicitudItem.Solicitud.UnidadEjecutoraId == unidadDelegado;
+        var esDelegadoConAcceso = unidadDelegado.HasValue && foto.SolicitudItem.UnidadEjecutoraId == unidadDelegado;
         if (foto.SolicitudItem.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin && !esDelegadoConAcceso)
         {
             return Forbid();
@@ -624,7 +632,7 @@ public class SolicitudesController(
             return NotFound();
         }
         var unidadDelegado = Roles.UnidadEjecutoraDelRolDelegado(User);
-        var esDelegadoConAcceso = unidadDelegado.HasValue && item.Solicitud.UnidadEjecutoraId == unidadDelegado;
+        var esDelegadoConAcceso = unidadDelegado.HasValue && item.UnidadEjecutoraId == unidadDelegado;
         if (item.Solicitud.UsuarioId != UsuarioIdActual && !EsAdmin && !esDelegadoConAcceso)
         {
             return Forbid();

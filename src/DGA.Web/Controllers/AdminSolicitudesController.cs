@@ -47,7 +47,7 @@ public class AdminSolicitudesController(
         }
         if (unidadEjecutoraId.HasValue)
         {
-            query = query.Where(s => s.UnidadEjecutoraId == unidadEjecutoraId.Value);
+            query = query.Where(s => s.Items.Any(i => i.UnidadEjecutoraId == unidadEjecutoraId.Value));
         }
         if (componenteId.HasValue)
         {
@@ -95,6 +95,7 @@ public class AdminSolicitudesController(
                     .Select(i => i.Elemento != null ? i.Elemento.Nombre : i.ElementoLibre)
                     .FirstOrDefault() ?? "-",
                 Detalle = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Detalle != null ? i.Detalle.Nombre : null).FirstOrDefault() ?? "-",
+                CantidadItems = s.Items.Count,
             })
             .ToListAsync();
 
@@ -139,21 +140,30 @@ public class AdminSolicitudesController(
         var solicitud = await db.Solicitudes
             .Include(s => s.Aduana).ThenInclude(a => a.TipoAduana)
             .Include(s => s.Cargo)
-            .Include(s => s.UnidadEjecutora)
             .Include(s => s.Estado)
             .Include(s => s.Items).ThenInclude(i => i.Componente)
             .Include(s => s.Items).ThenInclude(i => i.Subcomponente)
             .Include(s => s.Items).ThenInclude(i => i.Elemento)
             .Include(s => s.Items).ThenInclude(i => i.Detalle)
             .Include(s => s.Items).ThenInclude(i => i.Fotografias)
+            .Include(s => s.Items).ThenInclude(i => i.UnidadEjecutora)
+            .Include(s => s.Items).ThenInclude(i => i.CompletadoPorUsuario)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
+            .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
 
         if (solicitud is null)
         {
             return NotFound();
         }
+
+        var unidadesAsignadas = solicitud.Items
+            .Where(i => i.UnidadEjecutora is not null)
+            .Select(i => i.UnidadEjecutora!.Nombre)
+            .Distinct()
+            .OrderBy(n => n)
+            .ToList();
 
         var vm = new AdminSolicitudDetailViewModel
         {
@@ -163,8 +173,8 @@ public class AdminSolicitudesController(
             Estado = solicitud.Estado.Nombre,
             NombreResponsable = solicitud.NombreResponsable,
             Cargo = solicitud.Cargo?.Nombre,
-            UnidadEjecutora = solicitud.UnidadEjecutora?.Nombre,
-            UnidadEjecutoraId = solicitud.UnidadEjecutoraId,
+            UnidadesEjecutorasResumen = unidadesAsignadas.Count == 0 ? "Pendiente de asignar" : string.Join(", ", unidadesAsignadas),
+            PermiteGestionItems = Estados.PermiteGestionItems(solicitud.EstadoId),
             Aduana = $"{solicitud.Aduana.Codigo} - {solicitud.Aduana.Nombre}",
             TipoAduana = solicitud.Aduana.TipoAduana.Nombre,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -175,7 +185,7 @@ public class AdminSolicitudesController(
             EstadoOptions = await db.EstadosSolicitud
                 .Where(e => e.Id == solicitud.EstadoId || (e.Id == Estados.Aprobado || e.Id == Estados.Denegado || e.Id == Estados.EnProceso || e.Id == Estados.Finalizado))
                 .OrderBy(e => e.Orden).Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
-            UnidadEjecutoraOptions = await db.UnidadesEjecutoras.Where(u => u.Activo || u.Id == solicitud.UnidadEjecutoraId)
+            UnidadEjecutoraOptions = await db.UnidadesEjecutoras.Where(u => u.Activo)
                 .OrderBy(u => u.Orden).Select(u => new OpcionCatalogo(u.Id, u.Nombre)).ToListAsync(),
             Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
             {
@@ -196,17 +206,73 @@ public class AdminSolicitudesController(
                 UbicacionEspecifica = i.UbicacionEspecifica,
                 JustificacionItem = i.JustificacionItem,
                 Fotografias = i.Fotografias.Select(f => new SolicitudFotoViewModel { Id = f.Id, NombreOriginal = f.NombreOriginal }).ToList(),
+                UnidadEjecutoraId = i.UnidadEjecutoraId,
+                UnidadEjecutora = i.UnidadEjecutora?.Nombre,
+                Completado = i.Completado,
+                FechaCompletado = i.FechaCompletado,
+                CompletadoPor = i.CompletadoPorUsuario?.Email,
             }).ToList(),
             Historial = solicitud.Historial.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
                 EstadoAnterior = h.EstadoAnterior?.Nombre,
-                EstadoNuevo = h.EstadoNuevo.Nombre,
+                EstadoNuevo = h.EstadoNuevo?.Nombre,
+                NumeroItem = h.SolicitudItem?.NumeroItem,
+                ItemCompletado = h.ItemCompletado,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
             }).ToList(),
         };
 
         return View(vm);
+    }
+
+    [HttpPost("Items/AsignarUnidadEjecutora")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AsignarUnidadEjecutoraItem(int itemId, byte? unidadEjecutoraId)
+    {
+        var item = await db.SolicitudItems.Include(i => i.Solicitud)
+            .FirstOrDefaultAsync(i => i.Id == itemId && !i.Solicitud.IsDeleted);
+        if (item is null)
+        {
+            return NotFound();
+        }
+        if (!Estados.PermiteGestionItems(item.Solicitud.EstadoId))
+        {
+            TempData["Error"] = "Solo se puede asignar Unidad Ejecutora en solicitudes Aprobadas o En Proceso.";
+            return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+        }
+
+        item.UnidadEjecutoraId = unidadEjecutoraId;
+        item.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        TempData["Mensaje"] = $"Unidad Ejecutora del ítem #{item.NumeroItem} actualizada.";
+        return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+    }
+
+    [HttpPost("Items/MarcarCompletado")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarItemCompletado(int itemId, bool completado, string? comentario)
+    {
+        var item = await db.SolicitudItems
+            .Include(i => i.Solicitud).ThenInclude(s => s.Items)
+            .FirstOrDefaultAsync(i => i.Id == itemId && !i.Solicitud.IsDeleted);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var (ok, error, historial) = ItemCompletado.Marcar(item, completado, comentario, UsuarioIdActual);
+        if (!ok)
+        {
+            TempData["Error"] = error;
+            return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+        }
+
+        db.SolicitudHistorial.Add(historial!);
+        await db.SaveChangesAsync();
+        TempData["Mensaje"] = $"Ítem #{item.NumeroItem} {(completado ? "marcado" : "desmarcado")} como completado.";
+        return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
     }
 
     [HttpPost("CambiarEstado")]
@@ -230,17 +296,8 @@ public class AdminSolicitudesController(
             return RedirectToAction(nameof(Details), new { id = model.SolicitudId });
         }
 
-        var unidadEjecutoraFinal = model.UnidadEjecutoraId ?? solicitud.UnidadEjecutoraId;
-        if (Estados.RequiereUnidadEjecutora(model.NuevoEstadoId) && !unidadEjecutoraFinal.HasValue)
-        {
-            TempData["Error"] = "Indicá la Unidad Ejecutora antes de aprobar la solicitud.";
-            return RedirectToAction(nameof(Details), new { id = model.SolicitudId });
-        }
-
         var estadoAnterior = solicitud.EstadoId;
         solicitud.EstadoId = model.NuevoEstadoId;
-        solicitud.Progreso = Estados.ProgresoParaEstado(model.NuevoEstadoId);
-        solicitud.UnidadEjecutoraId = unidadEjecutoraFinal;
         solicitud.AdminRevisorId = UsuarioIdActual;
         solicitud.FechaRevision = DateTime.UtcNow;
         solicitud.UpdatedAt = DateTime.UtcNow;

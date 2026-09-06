@@ -25,22 +25,17 @@ public static class Estados
     public static bool PuedeDescartar(byte estadoId) => estadoId == GuardadoBorrador;
 
     /// <summary>
-    /// Progreso (0-100) que corresponde a cada estado. Denegado no tiene un punto de
-    /// avance definido — es una salida negativa del flujo, no un porcentaje de él.
-    /// Flujo: Guardado Borrador/Solicitado -> Aprobado -> En Proceso -> Finalizado.
+    /// El Progreso (%) ya no se deriva del Estado — es el % de ítems marcados como
+    /// completados en la solicitud (ver <see cref="ItemCompletado"/>). Este helper solo
+    /// calcula ese porcentaje a partir de los conteos.
     /// </summary>
-    public static byte? ProgresoParaEstado(byte estadoId) => estadoId switch
-    {
-        GuardadoBorrador or Solicitado => 0,
-        Aprobado => 40,
-        EnProceso => 60,
-        Finalizado => 100,
-        _ => null,
-    };
+    public static byte CalcularProgreso(int totalItems, int itemsCompletados) =>
+        (byte)(totalItems == 0 ? 0 : (int)Math.Round(100.0 * itemsCompletados / totalItems));
 
-    /// <summary>La Unidad Ejecutora la define el administrador recién al aprobar la
-    /// solicitud — es el análisis que determina quién la va a tramitar.</summary>
-    public static bool RequiereUnidadEjecutora(byte estadoId) => estadoId == Aprobado;
+    /// <summary>La Unidad Ejecutora de cada ítem y el checklist de completado solo se
+    /// gestionan mientras la solicitud está Aprobada o En Proceso — antes de Aprobado el
+    /// análisis todavía no se hizo, y Finalizado/Denegado ya cerraron el flujo.</summary>
+    public static bool PermiteGestionItems(byte estadoId) => estadoId is Aprobado or EnProceso;
 
     /// <summary>
     /// Guardado Borrador y Solicitado los pone el propio usuario (al guardar o finalizar

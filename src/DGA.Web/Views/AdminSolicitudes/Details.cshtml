@@ -23,7 +23,7 @@
             <h3 style="margin:0 0 14px;font-size:15px;">Información General</h3>
             <div class="detail-fields-grid">
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Responsable</div><div>@Model.NombreResponsable</div><div style="color:var(--dga-muted);">@Model.Cargo</div></div>
-                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Unidad Ejecutora</div><div>@(Model.UnidadEjecutora ?? "Pendiente de asignar")</div></div>
+                <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Unidades Ejecutoras</div><div>@Model.UnidadesEjecutorasResumen</div></div>
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Aduana</div><div>@Model.Aduana</div><div style="color:var(--dga-muted);">@Model.TipoAduana</div></div>
                 <div><div style="color:var(--dga-muted);font-size:11.5px;text-transform:uppercase;">Fecha de Registro</div><div>@Model.FechaRegistro.ASalvador().ToString("dd/MM/yyyy HH:mm")</div></div>
                 @if (Model.FechaRevision.HasValue)
@@ -99,6 +99,55 @@
                             }
                         </div>
                     }
+
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--dga-border);display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;">
+                        <form asp-action="AsignarUnidadEjecutoraItem" method="post" style="min-width:200px;">
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <label class="form-label" style="font-size:11px;">Unidad Ejecutora</label>
+                            <select name="unidadEjecutoraId" class="form-control" onchange="this.form.submit()" disabled="@(!Model.PermiteGestionItems)">
+                                <option value="">Sin asignar</option>
+                                @foreach (var opcion in Model.UnidadEjecutoraOptions)
+                                {
+                                    <option value="@opcion.Id" selected="@(item.UnidadEjecutoraId == opcion.Id)">@opcion.Nombre</option>
+                                }
+                            </select>
+                        </form>
+                        <div style="flex:1;min-width:260px;">
+                            <label class="form-label" style="font-size:11px;">Completado</label>
+                            @if (item.Completado)
+                            {
+                                <div class="status-badge is-success" style="margin-bottom:8px;">
+                                    Completado@(item.CompletadoPor is not null ? $" por {item.CompletadoPor}" : "")@(item.FechaCompletado.HasValue ? " — " + item.FechaCompletado.Value.ASalvador().ToString("dd/MM/yyyy HH:mm") : "")
+                                </div>
+                                @if (Model.PermiteGestionItems)
+                                {
+                                    <form asp-action="MarcarItemCompletado" method="post" class="item-completado-form">
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="completado" value="false" />
+                                        <textarea name="comentario" class="form-control" placeholder="Comentario (obligatorio) — visible en la bitácora" style="margin-bottom:6px;"></textarea>
+                                        <button type="submit" class="btn btn-outline btn-sm">Desmarcar como completado</button>
+                                    </form>
+                                }
+                            }
+                            else if (!item.UnidadEjecutoraId.HasValue)
+                            {
+                                <p style="color:var(--dga-muted);font-size:12px;margin:0;">Asigná una Unidad Ejecutora para poder marcarlo.</p>
+                            }
+                            else if (!Model.PermiteGestionItems)
+                            {
+                                <p style="color:var(--dga-muted);font-size:12px;margin:0;">No completado.</p>
+                            }
+                            else
+                            {
+                                <form asp-action="MarcarItemCompletado" method="post" class="item-completado-form">
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <input type="hidden" name="completado" value="true" />
+                                    <textarea name="comentario" class="form-control" placeholder="Comentario (obligatorio) — visible en la bitácora" style="margin-bottom:6px;"></textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm">Marcar como completado</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
                 </div>
             }
         </div>
@@ -121,18 +170,7 @@
                 <div class="form-group">
                     <label class="form-label">Progreso</label>
                     <div class="progress-track"><span style="width:@(Model.Progreso ?? 0)%;"></span></div>
-                    <span style="font-size:11.5px;color:var(--dga-muted);">@(Model.Progreso is null ? "No aplica para este estado" : $"{Model.Progreso}% — se calcula según el estado")</span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Unidad Ejecutora</label>
-                    <select name="UnidadEjecutoraId" class="form-control">
-                        <option value="">Sin asignar</option>
-                        @foreach (var opcion in Model.UnidadEjecutoraOptions)
-                        {
-                            <option value="@opcion.Id" selected="@(Model.UnidadEjecutoraId == opcion.Id)">@opcion.Nombre</option>
-                        }
-                    </select>
-                    <span style="font-size:11.5px;color:var(--dga-muted);">Se define al aprobar la solicitud — obligatoria para pasar a "Aprobado".</span>
+                    <span style="font-size:11.5px;color:var(--dga-muted);">@(Model.Progreso ?? 0)% — @Model.ItemsCompletados de @Model.Items.Count ítems completados</span>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Comentario Administrativo</label>
@@ -157,14 +195,7 @@
                 <div style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;">
                     @foreach (var h in Model.Historial)
                     {
-                        <div style="font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
-                            <div style="color:var(--dga-muted);margin-bottom:4px;">@h.FechaCambio.ASalvador().ToString("dd/MM/yyyy HH:mm")</div>
-                            <div><partial name="_EstadoBadge" model="@(h.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@h.EstadoNuevo" /></div>
-                            @if (!string.IsNullOrWhiteSpace(h.Comentario))
-                            {
-                                <div style="color:var(--dga-muted);margin-top:4px;">@h.Comentario</div>
-                            }
-                        </div>
+                        <partial name="_BitacoraEntrada" model="@h" />
                     }
                 </div>
             }

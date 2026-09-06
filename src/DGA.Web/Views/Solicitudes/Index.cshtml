@@ -41,6 +41,7 @@
                         <th style="padding:12px 16px;">Estado</th>
                         <th style="padding:12px 16px;">Responsable</th>
                         <th style="padding:12px 16px;">Fecha Registro</th>
+                        <th style="padding:12px 16px;">Ítems</th>
                         <th style="padding:12px 16px;">Fotografías</th>
                         <th style="padding:12px 16px;">Acciones</th>
                     </tr>
@@ -53,6 +54,7 @@
                             <td style="padding:12px 16px;"><partial name="_EstadoBadge" model="@s.Estado" /></td>
                             <td style="padding:12px 16px;">@s.NombreResponsable</td>
                             <td style="padding:12px 16px;">@s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy")</td>
+                            <td style="padding:12px 16px;">@s.CantidadItems</td>
                             <td style="padding:12px 16px;">@s.CantidadFotografias</td>
                             <td style="padding:12px 16px;">
                                 <div class="row-actions">

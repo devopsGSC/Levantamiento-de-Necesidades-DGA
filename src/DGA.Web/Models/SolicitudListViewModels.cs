@@ -7,6 +7,7 @@ public class SolicitudListItemViewModel
     public string Estado { get; set; } = string.Empty;
     public string NombreResponsable { get; set; } = string.Empty;
     public DateTime FechaRegistro { get; set; }
+    public int CantidadItems { get; set; }
     public int CantidadFotografias { get; set; }
     public bool EsEditable { get; set; }
     public bool PuedeDescartar { get; set; }
@@ -31,7 +32,6 @@ public class SolicitudDetailViewModel
     public string Estado { get; set; } = string.Empty;
     public string NombreResponsable { get; set; } = string.Empty;
     public string? Cargo { get; set; }
-    public string? UnidadEjecutora { get; set; }
     public string Aduana { get; set; } = string.Empty;
     public string TipoAduana { get; set; } = string.Empty;
     public string JustificacionGeneral { get; set; } = string.Empty;
@@ -75,6 +75,14 @@ public class SolicitudDetailItemViewModel
     public string? UbicacionEspecifica { get; set; }
     public string? JustificacionItem { get; set; }
     public List<SolicitudFotoViewModel> Fotografias { get; set; } = new();
+
+    /// <summary>Quién va a tramitar este ítem en particular — null hasta que el admin lo
+    /// asigna (recién con la solicitud Aprobada).</summary>
+    public byte? UnidadEjecutoraId { get; set; }
+    public string? UnidadEjecutora { get; set; }
+    public bool Completado { get; set; }
+    public DateTime? FechaCompletado { get; set; }
+    public string? CompletadoPor { get; set; }
 }
 
 /// <summary>Foto de un ítem para mostrar en pantalla (vistas de detalle) — se sirve
@@ -87,8 +95,16 @@ public class SolicitudFotoViewModel
 
 public class SolicitudHistorialItemViewModel
 {
+    /// <summary>Null cuando este evento es sobre un ítem (ver <see cref="NumeroItem"/>), no
+    /// un cambio de Estado de la solicitud.</summary>
     public string? EstadoAnterior { get; set; }
-    public string EstadoNuevo { get; set; } = string.Empty;
+    public string? EstadoNuevo { get; set; }
+
+    /// <summary>Número del ítem afectado — solo viene completo en eventos de completado de
+    /// ítem, no en cambios de Estado.</summary>
+    public int? NumeroItem { get; set; }
+    public bool? ItemCompletado { get; set; }
+
     public string? Comentario { get; set; }
     public DateTime FechaCambio { get; set; }
 }

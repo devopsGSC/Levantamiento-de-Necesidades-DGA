@@ -30,7 +30,7 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
     public async Task<IActionResult> Index(string? busqueda, byte? estado, int pagina = 1)
     {
         var unidadId = UnidadEjecutoraIdActual;
-        var query = db.Solicitudes.Where(s => !s.IsDeleted && s.UnidadEjecutoraId == unidadId
+        var query = db.Solicitudes.Where(s => !s.IsDeleted && s.Items.Any(i => i.UnidadEjecutoraId == unidadId)
             && (s.EstadoId == Estados.Aprobado || s.EstadoId == Estados.EnProceso || s.EstadoId == Estados.Finalizado));
 
         if (!string.IsNullOrWhiteSpace(busqueda))
@@ -60,6 +60,7 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
                 Aduana = s.Aduana.Codigo + " - " + s.Aduana.Nombre,
                 FechaRevision = s.FechaRevision,
                 Progreso = s.Progreso,
+                CantidadItemsAsignados = s.Items.Count(i => i.UnidadEjecutoraId == unidadId),
             })
             .ToListAsync();
 
@@ -91,15 +92,22 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
             .Include(s => s.Items).ThenInclude(i => i.Elemento)
             .Include(s => s.Items).ThenInclude(i => i.Detalle)
             .Include(s => s.Items).ThenInclude(i => i.Fotografias)
+            .Include(s => s.Items).ThenInclude(i => i.CompletadoPorUsuario)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
-            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted && s.UnidadEjecutoraId == unidadId
+            .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted && s.Items.Any(i => i.UnidadEjecutoraId == unidadId)
                 && (s.EstadoId == Estados.Aprobado || s.EstadoId == Estados.EnProceso || s.EstadoId == Estados.Finalizado));
 
         if (solicitud is null)
         {
             return NotFound();
         }
+
+        // Ítems de otras Unidades Ejecutoras no se muestran acá — este rol solo gestiona
+        // los suyos, aunque la solicitud completa traiga ítems de varias unidades.
+        var itemsPropios = solicitud.Items.Where(i => i.UnidadEjecutoraId == unidadId).OrderBy(i => i.NumeroItem).ToList();
+        var historialPropio = solicitud.Historial.Where(h => h.SolicitudItemId is null || itemsPropios.Any(i => i.Id == h.SolicitudItemId));
 
         var siguiente = Estados.SiguienteEstadoDelegado(solicitud.EstadoId);
         var vm = new MisRequerimientoDetailViewModel
@@ -117,10 +125,11 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
             FechaRegistro = solicitud.FechaRegistro,
             FechaRevision = solicitud.FechaRevision,
             Progreso = solicitud.Progreso,
+            PermiteGestionItems = Estados.PermiteGestionItems(solicitud.EstadoId),
             SiguienteEstadoNombre = siguiente.HasValue
                 ? await db.EstadosSolicitud.Where(e => e.Id == siguiente.Value).Select(e => e.Nombre).FirstOrDefaultAsync()
                 : null,
-            Items = solicitud.Items.OrderBy(i => i.NumeroItem).Select(i => new SolicitudDetailItemViewModel
+            Items = itemsPropios.Select(i => new SolicitudDetailItemViewModel
             {
                 Id = i.Id,
                 NumeroItem = i.NumeroItem,
@@ -139,11 +148,16 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
                 UbicacionEspecifica = i.UbicacionEspecifica,
                 JustificacionItem = i.JustificacionItem,
                 Fotografias = i.Fotografias.Select(f => new SolicitudFotoViewModel { Id = f.Id, NombreOriginal = f.NombreOriginal }).ToList(),
+                Completado = i.Completado,
+                FechaCompletado = i.FechaCompletado,
+                CompletadoPor = i.CompletadoPorUsuario?.Email,
             }).ToList(),
-            Historial = solicitud.Historial.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
+            Historial = historialPropio.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
                 EstadoAnterior = h.EstadoAnterior?.Nombre,
-                EstadoNuevo = h.EstadoNuevo.Nombre,
+                EstadoNuevo = h.EstadoNuevo?.Nombre,
+                NumeroItem = h.SolicitudItem?.NumeroItem,
+                ItemCompletado = h.ItemCompletado,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
             }).ToList(),
@@ -152,13 +166,39 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
         return View(vm);
     }
 
+    [HttpPost("Items/MarcarCompletado")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarItemCompletado(int itemId, bool completado, string? comentario)
+    {
+        var unidadId = UnidadEjecutoraIdActual;
+        var item = await db.SolicitudItems
+            .Include(i => i.Solicitud).ThenInclude(s => s.Items)
+            .FirstOrDefaultAsync(i => i.Id == itemId && !i.Solicitud.IsDeleted && i.UnidadEjecutoraId == unidadId);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var (ok, error, historial) = ItemCompletado.Marcar(item, completado, comentario, UsuarioIdActual);
+        if (!ok)
+        {
+            TempData["Error"] = error;
+            return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+        }
+
+        db.SolicitudHistorial.Add(historial!);
+        await db.SaveChangesAsync();
+        TempData["Mensaje"] = $"Ítem #{item.NumeroItem} {(completado ? "marcado" : "desmarcado")} como completado.";
+        return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+    }
+
     [HttpPost("AvanzarEstado")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AvanzarEstado(int solicitudId, string? comentario)
     {
         var unidadId = UnidadEjecutoraIdActual;
         var solicitud = await db.Solicitudes
-            .FirstOrDefaultAsync(s => s.Id == solicitudId && !s.IsDeleted && s.UnidadEjecutoraId == unidadId);
+            .FirstOrDefaultAsync(s => s.Id == solicitudId && !s.IsDeleted && s.Items.Any(i => i.UnidadEjecutoraId == unidadId));
 
         if (solicitud is null)
         {
@@ -174,7 +214,6 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
 
         var estadoAnterior = solicitud.EstadoId;
         solicitud.EstadoId = siguiente.Value;
-        solicitud.Progreso = Estados.ProgresoParaEstado(siguiente.Value);
         solicitud.UpdatedAt = DateTime.UtcNow;
         if (siguiente.Value == Estados.Finalizado)
         {

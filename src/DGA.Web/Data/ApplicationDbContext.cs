@@ -82,11 +82,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .HasForeignKey(s => s.CargoId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            entity.HasOne(s => s.UnidadEjecutora)
-                .WithMany()
-                .HasForeignKey(s => s.UnidadEjecutoraId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             entity.HasOne(s => s.Aduana)
                 .WithMany()
                 .HasForeignKey(s => s.AduanaId)
@@ -134,6 +129,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .WithMany()
                 .HasForeignKey(i => i.PrioridadId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(i => i.UnidadEjecutora)
+                .WithMany()
+                .HasForeignKey(i => i.UnidadEjecutoraId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(i => i.CompletadoPorUsuario)
+                .WithMany()
+                .HasForeignKey(i => i.CompletadoPorUsuarioId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<SolicitudItemFotografia>()
@@ -157,6 +162,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.HasOne(h => h.EstadoNuevo)
                 .WithMany()
                 .HasForeignKey(h => h.EstadoNuevoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(h => h.SolicitudItem)
+                .WithMany()
+                .HasForeignKey(h => h.SolicitudItemId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasOne(h => h.UsuarioCambio)

@@ -132,13 +132,13 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Componente</th><th>Elemento</th><th>Detalle</th><th>Aduana</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
+                        <th>ID</th><th>Componente</th><th>Elemento</th><th>Detalle</th><th>Ítems</th><th>Aduana</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model.Solicitudes.Count == 0)
                     {
-                        <tr><td colspan="8" style="text-align:center;color:var(--dga-muted);padding:28px;">No hay solicitudes que coincidan con el filtro.</td></tr>
+                        <tr><td colspan="9" style="text-align:center;color:var(--dga-muted);padding:28px;">No hay solicitudes que coincidan con el filtro.</td></tr>
                     }
                     else
                     {
@@ -149,6 +149,7 @@
                                 <td>@s.Componente</td>
                                 <td>@s.Elemento</td>
                                 <td>@s.Detalle</td>
+                                <td style="text-align:center;">@s.CantidadItems</td>
                                 <td>@s.Aduana</td>
                                 <td>@s.FechaRegistro.ASalvador().ToString("dd/MM/yyyy")</td>
                                 <td><partial name="_EstadoBadge" model="@s.Estado" /></td>

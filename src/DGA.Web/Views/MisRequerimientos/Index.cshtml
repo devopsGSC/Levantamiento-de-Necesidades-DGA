@@ -43,6 +43,7 @@
                         <th style="padding:12px 16px;">Estado</th>
                         <th style="padding:12px 16px;">Responsable</th>
                         <th style="padding:12px 16px;">Aduana</th>
+                        <th style="padding:12px 16px;">Ítems Asignados</th>
                         <th style="padding:12px 16px;">Asignado el</th>
                         <th style="padding:12px 16px;">Acciones</th>
                     </tr>
@@ -55,6 +56,7 @@
                             <td style="padding:12px 16px;"><partial name="_EstadoBadge" model="@s.Estado" /></td>
                             <td style="padding:12px 16px;">@s.NombreResponsable</td>
                             <td style="padding:12px 16px;">@s.Aduana</td>
+                            <td style="padding:12px 16px;text-align:center;">@s.CantidadItemsAsignados</td>
                             <td style="padding:12px 16px;">@(s.FechaRevision.HasValue ? s.FechaRevision.Value.ASalvador().ToString("dd/MM/yyyy") : "-")</td>
                             <td style="padding:12px 16px;">
                                 <div class="row-actions">

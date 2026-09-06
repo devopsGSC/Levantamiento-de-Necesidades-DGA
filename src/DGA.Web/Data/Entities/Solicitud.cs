@@ -11,18 +11,16 @@ public class Solicitud
     public string NombreResponsable { get; set; } = string.Empty;
     public byte CargoId { get; set; }
 
-    /// <summary>Quién va a tramitar la solicitud — no la elige el usuario al armarla, la
-    /// define el administrador recién al aprobarla (ver <see cref="Data.Estados.RequiereUnidadEjecutora"/>).
-    /// Null mientras la solicitud no llegó a Aprobado.</summary>
-    public byte? UnidadEjecutoraId { get; set; }
-
     public int AduanaId { get; set; }
     public string JustificacionGeneral { get; set; } = string.Empty;
     public string? ObservacionesGenerales { get; set; }
     public byte EstadoId { get; set; }
     public int? AdminRevisorId { get; set; }
 
-    /// <summary>Progreso 0-100 (antes "medicion" en el original).</summary>
+    /// <summary>Progreso 0-100 (antes "medicion" en el original). Ya no se deriva del Estado:
+    /// es el % de <see cref="SolicitudItem.Completado"/> entre los ítems de la solicitud — la
+    /// Unidad Ejecutora se asigna por ítem, no acá (ver <see cref="SolicitudItem.UnidadEjecutoraId"/>
+    /// y <see cref="Data.ItemCompletado"/>).</summary>
     public byte? Progreso { get; set; }
 
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
@@ -36,7 +34,6 @@ public class Solicitud
     public ApplicationUser Usuario { get; set; } = null!;
     public ApplicationUser? AdminRevisor { get; set; }
     public Cargo Cargo { get; set; } = null!;
-    public UnidadEjecutora? UnidadEjecutora { get; set; }
     public Aduana Aduana { get; set; } = null!;
     public EstadoSolicitud Estado { get; set; } = null!;
 

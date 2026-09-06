@@ -12,6 +12,11 @@ public class MisRequerimientoListItemViewModel
     public string Aduana { get; set; } = string.Empty;
     public DateTime? FechaRevision { get; set; }
     public byte? Progreso { get; set; }
+
+    /// <summary>Cuántos de los ítems de la solicitud están asignados a la Unidad Ejecutora de
+    /// este usuario — no el total de ítems de la solicitud, porque los de otras unidades ni
+    /// siquiera se le muestran.</summary>
+    public int CantidadItemsAsignados { get; set; }
 }
 
 public class MisRequerimientoIndexViewModel
@@ -41,6 +46,10 @@ public class MisRequerimientoDetailViewModel
     public DateTime FechaRegistro { get; set; }
     public DateTime? FechaRevision { get; set; }
     public byte? Progreso { get; set; }
+
+    /// <summary>Si todavía se pueden marcar ítems como completados (Aprobada o En Proceso).</summary>
+    public bool PermiteGestionItems { get; set; }
+    public int ItemsCompletados => Items.Count(i => i.Completado);
 
     /// <summary>Nombre del único estado al que este rol puede avanzar la solicitud
     /// (Aprobado -> En Proceso -> Finalizado). Null cuando ya no hay a dónde avanzar

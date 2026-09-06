@@ -58,6 +58,19 @@ public class SolicitudItem
     /// <summary>Justificación propia del ítem (antes "detalle_cascada" en el original — nombre engañoso, no es un nivel de catálogo).</summary>
     public string? JustificacionItem { get; set; }
 
+    /// <summary>Quién va a tramitar ESTE ítem — no toda la solicitud, porque ítems de una
+    /// misma solicitud pueden ir a unidades distintas. La define el administrador recién
+    /// con la solicitud Aprobada (ver <see cref="Data.Estados.PermiteGestionItems"/>). Null
+    /// hasta que se asigna.</summary>
+    public byte? UnidadEjecutoraId { get; set; }
+
+    /// <summary>Si el ítem ya fue completado por la Unidad Ejecutora asignada (o por un
+    /// admin). El Progreso (%) de la solicitud se calcula a partir de esto — ver
+    /// <see cref="Data.ItemCompletado"/>.</summary>
+    public bool Completado { get; set; }
+    public DateTime? FechaCompletado { get; set; }
+    public int? CompletadoPorUsuarioId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -67,6 +80,8 @@ public class SolicitudItem
     public Elemento? Elemento { get; set; }
     public Detalle? Detalle { get; set; }
     public Prioridad Prioridad { get; set; } = null!;
+    public UnidadEjecutora? UnidadEjecutora { get; set; }
+    public ApplicationUser? CompletadoPorUsuario { get; set; }
 
     public ICollection<SolicitudItemFotografia> Fotografias { get; set; } = new List<SolicitudItemFotografia>();
 }

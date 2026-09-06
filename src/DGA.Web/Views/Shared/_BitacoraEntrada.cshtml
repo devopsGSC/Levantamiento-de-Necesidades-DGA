@@ -1,0 +1,26 @@
+@model SolicitudHistorialItemViewModel
+@{
+    // Dos tipos de evento en la misma bitácora: cambio de Estado de la solicitud
+    // (EstadoNuevo completo) o un ítem marcado/desmarcado como completado (NumeroItem
+    // completo) — ver DGA.Web.Data.Entities.SolicitudHistorial.
+    var esCambioDeEstado = Model.EstadoNuevo is not null;
+}
+<div style="font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
+    <div style="color:var(--dga-muted);margin-bottom:4px;">@Model.FechaCambio.ASalvador().ToString("dd/MM/yyyy HH:mm")</div>
+    @if (esCambioDeEstado)
+    {
+        <div><partial name="_EstadoBadge" model="@(Model.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@Model.EstadoNuevo!" /></div>
+    }
+    else
+    {
+        <div>
+            <span class="status-badge @(Model.ItemCompletado == true ? "is-success" : "")">
+                Ítem #@Model.NumeroItem @(Model.ItemCompletado == true ? "marcado como completado" : "desmarcado")
+            </span>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Comentario))
+    {
+        <div style="color:var(--dga-muted);margin-top:4px;">@Model.Comentario</div>
+    }
+</div>

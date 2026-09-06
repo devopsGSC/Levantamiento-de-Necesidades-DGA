@@ -52,7 +52,7 @@ public class DashboardController(ApplicationDbContext db) : Controller
         }
         if (unidadEjecutoraId.HasValue)
         {
-            query = query.Where(s => s.UnidadEjecutoraId == unidadEjecutoraId.Value);
+            query = query.Where(s => s.Items.Any(i => i.UnidadEjecutoraId == unidadEjecutoraId.Value));
         }
         if (fechaDesde.HasValue)
         {
@@ -105,11 +105,17 @@ public class DashboardController(ApplicationDbContext db) : Controller
             Total = filas.Count,
         };
 
+        // Un contador por cada estado real del catálogo actual (ver Data/Estados.cs) — antes
+        // "En Proceso" se calculaba como Total menos otros tres estados, lo que en los hechos
+        // mezclaba Solicitado + Aprobado + En Proceso real en un solo número, y "Pendientes"
+        // duplicaba parte de esa misma cuenta bajo un nombre que no corresponde a ningún
+        // estado del catálogo (no existe "Pendiente" como estado).
         vm.Finalizadas = filas.Count(f => f.EstadoId == Estados.Finalizado);
         vm.Denegadas = filas.Count(f => f.EstadoId == Estados.Denegado);
         vm.Borradores = filas.Count(f => f.EstadoId == Estados.GuardadoBorrador);
-        vm.EnProceso = vm.Total - vm.Finalizadas - vm.Denegadas - vm.Borradores;
-        vm.Pendientes = filas.Count(f => f.EstadoId == Estados.Solicitado);
+        vm.Solicitadas = filas.Count(f => f.EstadoId == Estados.Solicitado);
+        vm.Aprobadas = filas.Count(f => f.EstadoId == Estados.Aprobado);
+        vm.EnProceso = filas.Count(f => f.EstadoId == Estados.EnProceso);
         vm.PrioridadAlta = filas.Count(f => f.PrimeraPrioridadId == 1);
         vm.ProgresoPromedio = vm.Total == 0 ? 0 : Math.Round(filas.Average(f => f.Progreso), 0);
 

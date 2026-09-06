@@ -111,9 +111,14 @@
             <div class="kpi-card__label">En Proceso</div>
         </div>
         <div class="card kpi-card">
-            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.Pendientes)%</span></div>
-            <div class="kpi-card__value">@Model.Pendientes</div>
-            <div class="kpi-card__label">Pendientes</div>
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.Aprobadas)%</span></div>
+            <div class="kpi-card__value">@Model.Aprobadas</div>
+            <div class="kpi-card__label">Aprobadas</div>
+        </div>
+        <div class="card kpi-card">
+            <div class="kpi-card__top"><span class="kpi-card__pct">@Model.Pct(Model.Solicitadas)%</span></div>
+            <div class="kpi-card__value">@Model.Solicitadas</div>
+            <div class="kpi-card__label">Solicitadas</div>
         </div>
         <div class="card kpi-card">
             <div class="kpi-card__top"><span class="kpi-card__pct" style="color:var(--dga-danger);">@Model.Pct(Model.Denegadas)%</span></div>

@@ -25,7 +25,8 @@ public class DashboardViewModel
     public int Total { get; set; }
     public int Finalizadas { get; set; }
     public int EnProceso { get; set; }
-    public int Pendientes { get; set; }
+    public int Solicitadas { get; set; }
+    public int Aprobadas { get; set; }
     public int Denegadas { get; set; }
     public int Borradores { get; set; }
     public int PrioridadAlta { get; set; }

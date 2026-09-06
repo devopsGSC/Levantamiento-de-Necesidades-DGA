@@ -108,10 +108,8 @@ public class AccountController(
 
             await emailSender.SendAsync(
                 usuario.Email!,
-                "Recuperación de contraseña — Levantamiento de Necesidades DGA",
-                $"Hacé clic en el siguiente enlace para restablecer tu contraseña: " +
-                $"<a href=\"{HtmlEncoder.Default.Encode(enlace)}\">{HtmlEncoder.Default.Encode(enlace)}</a>. " +
-                "Si no solicitaste este cambio, ignorá este correo.");
+                ResetPasswordEmailTemplate.Asunto,
+                ResetPasswordEmailTemplate.ConstruirCuerpo(HtmlEncoder.Default.Encode(enlace)));
         }
 
         return RedirectToAction(nameof(ForgotPasswordConfirmation));

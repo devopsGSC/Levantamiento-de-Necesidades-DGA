@@ -263,16 +263,11 @@
   detalleSel.addEventListener('change', actualizarCamposSuscripcion);
 
   // ---------------------------------------------------------------
-  // "Agregar nuevo" de Elemento / Detalle — cualquier usuario puede sumar al
-  // catálogo lo que no encuentra en la lista mientras completa un ítem.
+  // "Agregar nuevo" de Detalle — cualquier usuario puede sumar al catálogo lo
+  // que no encuentra en la lista mientras completa un ítem. (El mismo mecanismo
+  // para Elemento / Necesidad se quitó a pedido del usuario: ese campo queda
+  // limitado al catálogo existente, sin opción de agregar uno nuevo desde acá.)
   // ---------------------------------------------------------------
-
-  const agregarElemento = document.getElementById('agregar-elemento');
-  const btnMostrarAgregarElemento = document.getElementById('btn-mostrar-agregar-elemento');
-  const formAgregarElemento = document.getElementById('form-agregar-elemento');
-  const nuevoElementoNombre = document.getElementById('nuevo-elemento-nombre');
-  const btnGuardarElemento = document.getElementById('btn-guardar-elemento');
-  const btnCancelarElemento = document.getElementById('btn-cancelar-elemento');
 
   const btnMostrarAgregarDetalle = document.getElementById('btn-mostrar-agregar-detalle');
   const formAgregarDetalle = document.getElementById('form-agregar-detalle');
@@ -280,23 +275,11 @@
   const btnGuardarDetalle = document.getElementById('btn-guardar-detalle');
   const btnCancelarDetalle = document.getElementById('btn-cancelar-detalle');
 
-  function ocultarFormAgregarElemento() {
-    formAgregarElemento.hidden = true;
-    btnMostrarAgregarElemento.hidden = false;
-    nuevoElementoNombre.value = '';
-  }
   function ocultarFormAgregarDetalle() {
     formAgregarDetalle.hidden = true;
     btnMostrarAgregarDetalle.hidden = false;
     nuevoDetalleNombre.value = '';
   }
-
-  btnMostrarAgregarElemento.addEventListener('click', () => {
-    formAgregarElemento.hidden = false;
-    btnMostrarAgregarElemento.hidden = true;
-    nuevoElementoNombre.focus();
-  });
-  btnCancelarElemento.addEventListener('click', ocultarFormAgregarElemento);
 
   btnMostrarAgregarDetalle.addEventListener('click', () => {
     formAgregarDetalle.hidden = false;
@@ -304,36 +287,6 @@
     nuevoDetalleNombre.focus();
   });
   btnCancelarDetalle.addEventListener('click', ocultarFormAgregarDetalle);
-
-  async function agregarElementoAlCatalogo() {
-    const nombre = nuevoElementoNombre.value.trim();
-    if (!nombre) {
-      dgaToast('Ingresá el nombre del nuevo elemento.', 'warning');
-      return;
-    }
-    const fd = new FormData();
-    fd.append('subcomponenteId', subcomponenteSel.value);
-    fd.append('nombre', nombre);
-    fd.append('__RequestVerificationToken', token);
-    dgaBotonCargando(btnGuardarElemento, true);
-    try {
-      const resp = await fetch('/Catalogos/CrearElemento', { method: 'POST', body: fd });
-      const data = await resp.json();
-      if (!resp.ok) {
-        dgaToast(data.error || 'No se pudo agregar el elemento.', 'danger');
-        return;
-      }
-      ocultarFormAgregarElemento();
-      await cargarElementos(subcomponenteSel.value, data.id);
-      dgaToast('"' + data.nombre + '" agregado. Ya está seleccionado.', 'success');
-    } finally {
-      dgaBotonCargando(btnGuardarElemento, false);
-    }
-  }
-  btnGuardarElemento.addEventListener('click', agregarElementoAlCatalogo);
-  nuevoElementoNombre.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); agregarElementoAlCatalogo(); }
-  });
 
   async function agregarDetalleAlCatalogo() {
     const nombre = nuevoDetalleNombre.value.trim();
@@ -424,12 +377,9 @@
       wrapElementoSelect.hidden = true;
       wrapElementoChecklist.hidden = true;
       wrapElementoLibre.hidden = false;
-      agregarElemento.hidden = true;
       elementoSel.disabled = true;
       return;
     }
-
-    agregarElemento.hidden = false;
 
     // Checklist (lista con selección única, más fácil de escanear que un combo
     // largo) solo cuando hay más de una opción Y ninguna necesita el 4º nivel
@@ -500,8 +450,6 @@
     wrapElementoChecklist.hidden = true;
     wrapElementoLibre.hidden = true;
     wrapDetalle.hidden = true;
-    agregarElemento.hidden = true;
-    ocultarFormAgregarElemento();
     ocultarFormAgregarDetalle();
     wrapSuscripcion.hidden = true;
     labelCostoEstimado.textContent = 'Costo Estimado *';

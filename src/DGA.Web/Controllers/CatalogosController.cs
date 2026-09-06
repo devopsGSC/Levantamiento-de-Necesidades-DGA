@@ -55,41 +55,10 @@ public class CatalogosController(ApplicationDbContext db) : Controller
         return Json(datos);
     }
 
-    /// <summary>Cualquier usuario logueado puede sumar un Elemento que no encuentra en la
-    /// lista mientras completa una solicitud — no es una acción exclusiva de Admin, pero
-    /// queda disponible para todas las solicitudes futuras igual que si lo hubiera cargado
-    /// un administrador desde el catálogo.</summary>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CrearElemento(int subcomponenteId, string nombre)
-    {
-        nombre = nombre?.Trim() ?? string.Empty;
-        if (nombre.Length == 0)
-        {
-            return BadRequest(new { error = "Ingresá un nombre." });
-        }
-        if (!await db.Subcomponentes.AnyAsync(s => s.Id == subcomponenteId))
-        {
-            return NotFound();
-        }
-        var existente = await db.Elementos.FirstOrDefaultAsync(e =>
-            e.SubcomponenteId == subcomponenteId && e.Nombre.ToLower() == nombre.ToLower());
-        if (existente is not null)
-        {
-            return Json(new { id = existente.Id, nombre = existente.Nombre, tieneDetalle = existente.TieneDetalle });
-        }
-
-        var siguienteId = (await db.Elementos.MaxAsync(e => (int?)e.Id)) is { } max ? max + 1 : 1;
-        var siguienteOrden = (short)((await db.Elementos.Where(e => e.SubcomponenteId == subcomponenteId).MaxAsync(e => (short?)e.Orden)) is { } maxOrden ? maxOrden + 1 : 1);
-        var elemento = new Elemento { Id = siguienteId, SubcomponenteId = subcomponenteId, Nombre = nombre, TieneDetalle = false, Orden = siguienteOrden, Activo = true };
-        db.Elementos.Add(elemento);
-        await db.SaveChangesAsync();
-
-        return Json(new { id = elemento.Id, nombre = elemento.Nombre, tieneDetalle = elemento.TieneDetalle });
-    }
-
-    /// <summary>Igual que <see cref="CrearElemento"/> pero para el 4º nivel (Detalle), dentro
-    /// de un Elemento que ya requiere ese nivel de precisión.</summary>
+    /// <summary>Cualquier usuario logueado puede sumar un Detalle que no encuentra en la
+    /// lista mientras completa una solicitud, dentro de un Elemento que ya requiere ese 4º
+    /// nivel de precisión. (El equivalente para Elemento / Necesidad se quitó a pedido del
+    /// usuario — ese campo queda limitado al catálogo existente.)</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CrearDetalle(int elementoId, string nombre)

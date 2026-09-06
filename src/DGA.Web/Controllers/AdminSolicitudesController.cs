@@ -151,6 +151,7 @@ public class AdminSolicitudesController(
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
             .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
+            .Include(s => s.Historial).ThenInclude(h => h.UsuarioCambio)
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
 
         if (solicitud is null)
@@ -210,7 +211,7 @@ public class AdminSolicitudesController(
                 UnidadEjecutora = i.UnidadEjecutora?.Nombre,
                 Completado = i.Completado,
                 FechaCompletado = i.FechaCompletado,
-                CompletadoPor = i.CompletadoPorUsuario?.Email,
+                CompletadoPor = i.CompletadoPorUsuario?.Nombre,
             }).ToList(),
             Historial = solicitud.Historial.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
@@ -218,6 +219,7 @@ public class AdminSolicitudesController(
                 EstadoNuevo = h.EstadoNuevo?.Nombre,
                 NumeroItem = h.SolicitudItem?.NumeroItem,
                 ItemCompletado = h.ItemCompletado,
+                UsuarioCambio = h.UsuarioCambio != null ? h.UsuarioCambio.Nombre : null,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
             }).ToList(),

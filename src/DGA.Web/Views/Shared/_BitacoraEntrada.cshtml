@@ -6,7 +6,13 @@
     var esCambioDeEstado = Model.EstadoNuevo is not null;
 }
 <div style="font-size:13px;border-bottom:1px solid var(--dga-border);padding-bottom:10px;">
-    <div style="color:var(--dga-muted);margin-bottom:4px;">@Model.FechaCambio.ASalvador().ToString("dd/MM/yyyy HH:mm")</div>
+    <div style="color:var(--dga-muted);margin-bottom:4px;">
+        @Model.FechaCambio.ASalvador().ToString("dd/MM/yyyy HH:mm")
+        @if (!string.IsNullOrWhiteSpace(Model.UsuarioCambio))
+        {
+            <text> · @Model.UsuarioCambio</text>
+        }
+    </div>
     @if (esCambioDeEstado)
     {
         <div><partial name="_EstadoBadge" model="@(Model.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@Model.EstadoNuevo!" /></div>

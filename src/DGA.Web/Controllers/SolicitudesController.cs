@@ -405,6 +405,7 @@ public class SolicitudesController(
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
             .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
+            .Include(s => s.Historial).ThenInclude(h => h.UsuarioCambio)
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
 
         if (solicitud is null || (solicitud.UsuarioId != UsuarioIdActual && !EsAdmin))
@@ -456,6 +457,7 @@ public class SolicitudesController(
                 EstadoNuevo = h.EstadoNuevo?.Nombre,
                 NumeroItem = h.SolicitudItem != null ? h.SolicitudItem.NumeroItem : (int?)null,
                 ItemCompletado = h.ItemCompletado,
+                UsuarioCambio = h.UsuarioCambio != null ? h.UsuarioCambio.Nombre : null,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
             }).ToList(),

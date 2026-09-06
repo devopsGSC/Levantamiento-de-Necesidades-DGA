@@ -105,6 +105,10 @@ public class SolicitudHistorialItemViewModel
     public int? NumeroItem { get; set; }
     public bool? ItemCompletado { get; set; }
 
+    /// <summary>Nombre de quién hizo el cambio (dueño de la solicitud, admin, o usuario de la
+    /// Unidad Ejecutora delegada, según el caso).</summary>
+    public string? UsuarioCambio { get; set; }
+
     public string? Comentario { get; set; }
     public DateTime FechaCambio { get; set; }
 }

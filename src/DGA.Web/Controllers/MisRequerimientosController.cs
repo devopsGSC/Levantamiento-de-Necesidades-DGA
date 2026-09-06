@@ -96,6 +96,7 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
             .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
+            .Include(s => s.Historial).ThenInclude(h => h.UsuarioCambio)
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted && s.Items.Any(i => i.UnidadEjecutoraId == unidadId)
                 && (s.EstadoId == Estados.Aprobado || s.EstadoId == Estados.EnProceso || s.EstadoId == Estados.Finalizado));
 
@@ -150,7 +151,7 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
                 Fotografias = i.Fotografias.Select(f => new SolicitudFotoViewModel { Id = f.Id, NombreOriginal = f.NombreOriginal }).ToList(),
                 Completado = i.Completado,
                 FechaCompletado = i.FechaCompletado,
-                CompletadoPor = i.CompletadoPorUsuario?.Email,
+                CompletadoPor = i.CompletadoPorUsuario?.Nombre,
             }).ToList(),
             Historial = historialPropio.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
@@ -158,6 +159,7 @@ public class MisRequerimientosController(ApplicationDbContext db, UserManager<Ap
                 EstadoNuevo = h.EstadoNuevo?.Nombre,
                 NumeroItem = h.SolicitudItem?.NumeroItem,
                 ItemCompletado = h.ItemCompletado,
+                UsuarioCambio = h.UsuarioCambio != null ? h.UsuarioCambio.Nombre : null,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
             }).ToList(),

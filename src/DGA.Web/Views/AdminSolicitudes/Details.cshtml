@@ -156,28 +156,35 @@
     <div class="detail-grid-2">
         <div class="card" style="padding:20px 22px;">
             <h3 style="margin:0 0 16px;font-size:15px;">Gestión de Estado</h3>
-            <form asp-action="CambiarEstado" method="post">
-                <input type="hidden" name="SolicitudId" value="@Model.Id" />
-                <div class="form-group">
-                    <label class="form-label">Cambiar Estado</label>
-                    <select name="NuevoEstadoId" class="form-control">
-                        @foreach (var opcion in Model.EstadoOptions)
-                        {
-                            <option value="@opcion.Id" selected="@(opcion.Id == Model.EstadoActualId)">@opcion.Nombre</option>
-                        }
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Progreso</label>
-                    <div class="progress-track"><span style="width:@(Model.Progreso ?? 0)%;"></span></div>
-                    <span style="font-size:11.5px;color:var(--dga-muted);">@(Model.Progreso ?? 0)% — @Model.ItemsCompletados de @Model.Items.Count ítems completados</span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Comentario Administrativo</label>
-                    <textarea name="Comentario" class="form-control" placeholder="Opcional — visible en la bitácora"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Guardar Cambios</button>
-            </form>
+            @if (!Model.PermiteGestionEstado)
+            {
+                <p style="color:var(--dga-muted);font-size:13px;">El usuario todavía está editando esta solicitud (Borrador) y no la ha enviado. Vas a poder gestionar el estado en cuanto la envíe (Solicitado).</p>
+            }
+            else
+            {
+                <form asp-action="CambiarEstado" method="post">
+                    <input type="hidden" name="SolicitudId" value="@Model.Id" />
+                    <div class="form-group">
+                        <label class="form-label">Cambiar Estado</label>
+                        <select name="NuevoEstadoId" class="form-control">
+                            @foreach (var opcion in Model.EstadoOptions)
+                            {
+                                <option value="@opcion.Id" selected="@(opcion.Id == Model.EstadoActualId)">@opcion.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Progreso</label>
+                        <div class="progress-track"><span style="width:@(Model.Progreso ?? 0)%;"></span></div>
+                        <span style="font-size:11.5px;color:var(--dga-muted);">@(Model.Progreso ?? 0)% — @Model.ItemsCompletados de @Model.Items.Count ítems completados</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Comentario Administrativo</label>
+                        <textarea name="Comentario" class="form-control" placeholder="Opcional — visible en la bitácora"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Guardar Cambios</button>
+                </form>
+            }
             <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post" style="margin-top:10px;"
                   data-confirm="¿Eliminar esta solicitud? Esta acción no se puede deshacer." data-confirm-peligroso="true">
                 <button type="submit" class="btn btn-outline btn-block is-danger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg> Eliminar Solicitud</button>

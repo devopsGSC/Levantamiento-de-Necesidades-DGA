@@ -44,6 +44,13 @@ public static class Estados
     public static bool PuedeEstablecerAdmin(byte estadoId) => estadoId is Aprobado or Denegado or EnProceso or Finalizado;
 
     /// <summary>
+    /// El admin no puede gestionar (cambiar de estado) una solicitud mientras está en
+    /// Guardado Borrador — el usuario todavía la está editando y ni siquiera la envió.
+    /// Recién puede intervenir a partir de Solicitado en adelante.
+    /// </summary>
+    public static bool PermiteGestionEstadoAdmin(byte estadoId) => estadoId != GuardadoBorrador;
+
+    /// <summary>
     /// Único paso hacia adelante que puede dar el usuario de un rol delegado (Compras DGA,
     /// Mantenimiento DGA, Otro) sobre una solicitud que el admin ya le asignó. Nunca puede
     /// aprobar, denegar ni reasignar Unidad Ejecutora — eso es exclusivo del admin.

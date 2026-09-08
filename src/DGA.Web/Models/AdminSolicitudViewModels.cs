@@ -66,6 +66,10 @@ public class AdminSolicitudDetailViewModel
     /// marcar ítems como completados (Aprobada o En Proceso).</summary>
     public bool PermiteGestionItems { get; set; }
 
+    /// <summary>Si el admin puede cambiar el estado de la solicitud — no mientras está en
+    /// Guardado Borrador, porque ahí el usuario todavía la está editando.</summary>
+    public bool PermiteGestionEstado { get; set; }
+
     public string Aduana { get; set; } = string.Empty;
     public string TipoAduana { get; set; } = string.Empty;
     public string JustificacionGeneral { get; set; } = string.Empty;

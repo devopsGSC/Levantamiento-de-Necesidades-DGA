@@ -176,6 +176,7 @@ public class AdminSolicitudesController(
             Cargo = solicitud.Cargo?.Nombre,
             UnidadesEjecutorasResumen = unidadesAsignadas.Count == 0 ? "Pendiente de asignar" : string.Join(", ", unidadesAsignadas),
             PermiteGestionItems = Estados.PermiteGestionItems(solicitud.EstadoId),
+            PermiteGestionEstado = Estados.PermiteGestionEstadoAdmin(solicitud.EstadoId),
             Aduana = $"{solicitud.Aduana.Codigo} - {solicitud.Aduana.Nombre}",
             TipoAduana = solicitud.Aduana.TipoAduana.Nombre,
             JustificacionGeneral = solicitud.JustificacionGeneral,
@@ -287,6 +288,11 @@ public class AdminSolicitudesController(
             return NotFound();
         }
 
+        if (!Estados.PermiteGestionEstadoAdmin(solicitud.EstadoId))
+        {
+            TempData["Error"] = "No se puede cambiar el estado mientras la solicitud está en Borrador — el usuario todavía la está editando.";
+            return RedirectToAction(nameof(Details), new { id = model.SolicitudId });
+        }
         if (!Estados.PuedeEstablecerAdmin(model.NuevoEstadoId))
         {
             TempData["Error"] = "Ese estado no se puede asignar manualmente.";

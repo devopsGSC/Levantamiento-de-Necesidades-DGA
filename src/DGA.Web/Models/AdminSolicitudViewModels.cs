@@ -78,6 +78,7 @@ public class AdminSolicitudDetailViewModel
     public DateTime? FechaRevision { get; set; }
     public byte? Progreso { get; set; }
     public int ItemsCompletados => Items.Count(i => i.Completado);
+    public int ItemsDenegados => Items.Count(i => i.Denegado);
 
     public List<SolicitudDetailItemViewModel> Items { get; set; } = new();
     public List<SolicitudHistorialItemViewModel> Historial { get; set; } = new();

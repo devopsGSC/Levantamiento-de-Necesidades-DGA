@@ -152,7 +152,7 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
                                 CeldaItem(tabla.Cell()).AlignRight().Text(item.TienePresupuesto ? $"{FormatoMoneda(item.CostoEstimado)} ({(item.TipoCosto == "Total" ? "Tot." : "Unit.")})" : "Sin presupuesto").FontSize(7.5f);
                                 CeldaItem(tabla.Cell()).AlignRight().Text(FormatoMoneda(Subtotal(item))).FontSize(8f).SemiBold();
                                 CeldaItem(tabla.Cell()).Text(item.UnidadEjecutora?.Nombre ?? "-").FontSize(8f);
-                                CeldaItem(tabla.Cell()).AlignCenter().Text(item.Completado ? "Sí" : "-").FontSize(8.5f);
+                                CeldaItem(tabla.Cell()).AlignCenter().Text(item.Completado ? "Sí" : item.Denegado ? "No aplica" : "-").FontSize(8.5f);
                             }
 
                             tabla.Cell().ColumnSpan(5).Background(Colors.BlueGrey.Lighten5).Padding(6).AlignRight().Text("TOTAL DE CANTIDADES:").Bold().FontSize(8.5f);
@@ -275,7 +275,7 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
         hojaGeneral.Columns().Style.Alignment.WrapText = true;
 
         var hojaItems = libro.Worksheets.Add("Ítems");
-        string[] encabezados = ["N°", "Componente", "Subcomponente", "Elemento", "Detalle", "Cantidad", "Costo Estimado", "Tipo de Costo", "Subtotal", "Cotización Adjunta", "Prioridad", "Ubicación Específica", "Justificación del Ítem", "Fotografías", "Unidad Ejecutora", "Completado"];
+        string[] encabezados = ["N°", "Componente", "Subcomponente", "Elemento", "Detalle", "Cantidad", "Costo Estimado", "Tipo de Costo", "Subtotal", "Cotización Adjunta", "Prioridad", "Ubicación Específica", "Justificación del Ítem", "Fotografías", "Unidad Ejecutora", "Estado del Ítem", "Motivo Denegación"];
         for (var c = 0; c < encabezados.Length; c++)
         {
             hojaItems.Cell(1, c + 1).Value = encabezados[c];
@@ -310,7 +310,8 @@ public class SolicitudExportService(ApplicationDbContext db, FileStorageService 
             hojaItems.Cell(fila2, 13).Value = item.JustificacionItem ?? "-";
             hojaItems.Cell(fila2, 14).Value = item.Fotografias.Count;
             hojaItems.Cell(fila2, 15).Value = item.UnidadEjecutora?.Nombre ?? "-";
-            hojaItems.Cell(fila2, 16).Value = item.Completado ? "Sí" : "No";
+            hojaItems.Cell(fila2, 16).Value = item.Completado ? "Completado" : item.Denegado ? "No aplica (denegado)" : "Pendiente";
+            hojaItems.Cell(fila2, 17).Value = item.MotivoDenegacion ?? "-";
             fila2++;
         }
 

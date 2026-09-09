@@ -260,12 +260,33 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="dga-prompt" hidden>
+        <div class="modal-box" style="max-width:460px;">
+            <div class="modal-box__header has-icon">
+                <div class="modal-icon is-normal" id="dga-prompt-icon"></div>
+                <div>
+                    <h3 id="dga-prompt-title">Comentario</h3>
+                    <p id="dga-prompt-body">-</p>
+                </div>
+            </div>
+            <div class="modal-box__body">
+                <textarea id="dga-prompt-input" class="form-control" rows="3" placeholder="Comentario (obligatorio) — visible en la bitácora"></textarea>
+                <p id="dga-prompt-error" style="color:var(--dga-danger);font-size:12.5px;margin:6px 0 0;" hidden>Ingresá un comentario para continuar.</p>
+            </div>
+            <div class="modal-box__footer">
+                <button type="button" class="btn btn-outline" id="dga-prompt-cancel">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="dga-prompt-ok">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-stack" id="dga-toast-stack"></div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/lightbox.js" asp-append-version="true"></script>
     <script src="~/js/loading.js" asp-append-version="true"></script>
     <script src="~/js/dialogs.js" asp-append-version="true"></script>
+    <script src="~/js/item-estado.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -450,6 +450,9 @@ public class SolicitudesController(
                 UnidadEjecutora = i.UnidadEjecutora?.Nombre,
                 Completado = i.Completado,
                 FechaCompletado = i.FechaCompletado,
+                Denegado = i.Denegado,
+                MotivoDenegacion = i.MotivoDenegacion,
+                FechaDenegado = i.FechaDenegado,
             }).ToList(),
             Historial = solicitud.Historial.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
@@ -457,6 +460,7 @@ public class SolicitudesController(
                 EstadoNuevo = h.EstadoNuevo?.Nombre,
                 NumeroItem = h.SolicitudItem != null ? h.SolicitudItem.NumeroItem : (int?)null,
                 ItemCompletado = h.ItemCompletado,
+                ItemDenegado = h.ItemDenegado,
                 UsuarioCambio = h.UsuarioCambio != null ? h.UsuarioCambio.Nombre : null,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,

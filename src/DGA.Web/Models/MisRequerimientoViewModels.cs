@@ -50,6 +50,7 @@ public class MisRequerimientoDetailViewModel
     /// <summary>Si todavía se pueden marcar ítems como completados (Aprobada o En Proceso).</summary>
     public bool PermiteGestionItems { get; set; }
     public int ItemsCompletados => Items.Count(i => i.Completado);
+    public int ItemsDenegados => Items.Count(i => i.Denegado);
 
     /// <summary>Nombre del único estado al que este rol puede avanzar la solicitud
     /// (Aprobado -> En Proceso -> Finalizado). Null cuando ya no hay a dónde avanzar

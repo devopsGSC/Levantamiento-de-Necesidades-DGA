@@ -80,6 +80,69 @@
   }
 
   // ---------------------------------------------------------------
+  // Prompt (pide un comentario — usado por los checkboxes de Completado/
+  // Denegado por ítem antes de enviar el formulario; obligatorio para
+  // Denegado porque el motivo lo ve el dueño de la solicitud, opcional
+  // para Completado)
+  // ---------------------------------------------------------------
+
+  var promptOverlay = document.getElementById('dga-prompt');
+  if (promptOverlay) {
+    var promptBody = document.getElementById('dga-prompt-body');
+    var promptInput = document.getElementById('dga-prompt-input');
+    var promptError = document.getElementById('dga-prompt-error');
+    var promptOk = document.getElementById('dga-prompt-ok');
+    var promptCancel = document.getElementById('dga-prompt-cancel');
+    var promptResolver = null;
+    var promptObligatorio = true;
+
+    function cerrarPrompt(resultado) {
+      promptOverlay.hidden = true;
+      promptInput.value = '';
+      promptError.hidden = true;
+      if (promptResolver) {
+        var r = promptResolver;
+        promptResolver = null;
+        r(resultado);
+      }
+    }
+
+    // Devuelve una Promise<string|null> — string con el comentario (puede ser "" si
+    // opciones.obligatorio es false) cuando confirma, null si cancela.
+    window.dgaPrompt = function (mensaje, opciones) {
+      opciones = opciones || {};
+      promptObligatorio = opciones.obligatorio !== false;
+      promptBody.textContent = mensaje;
+      promptOk.textContent = opciones.textoConfirmar || 'Confirmar';
+      promptInput.placeholder = promptObligatorio
+        ? 'Comentario (obligatorio) — visible en la bitácora'
+        : 'Comentario (opcional) — visible en la bitácora';
+      promptOverlay.hidden = false;
+      promptInput.focus();
+      return new Promise(function (resolve) {
+        promptResolver = resolve;
+      });
+    };
+
+    promptOk.addEventListener('click', function () {
+      var valor = promptInput.value.trim();
+      if (!valor && promptObligatorio) {
+        promptError.hidden = false;
+        promptInput.focus();
+        return;
+      }
+      cerrarPrompt(valor);
+    });
+    promptCancel.addEventListener('click', function () { cerrarPrompt(null); });
+    promptOverlay.addEventListener('click', function (e) {
+      if (e.target === promptOverlay) cerrarPrompt(null);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !promptOverlay.hidden) cerrarPrompt(null);
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Toast (reemplaza window.alert para avisos no bloqueantes)
   // ---------------------------------------------------------------
 

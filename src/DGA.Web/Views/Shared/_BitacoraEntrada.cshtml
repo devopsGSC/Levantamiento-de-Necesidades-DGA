@@ -17,6 +17,14 @@
     {
         <div><partial name="_EstadoBadge" model="@(Model.EstadoAnterior ?? "—")" /> → <partial name="_EstadoBadge" model="@Model.EstadoNuevo!" /></div>
     }
+    else if (Model.ItemDenegado is not null)
+    {
+        <div>
+            <span class="status-badge @(Model.ItemDenegado == true ? "is-danger" : "")">
+                Ítem #@Model.NumeroItem @(Model.ItemDenegado == true ? "denegado (no aplica)" : "vuelto a habilitar")
+            </span>
+        </div>
+    }
     else
     {
         <div>

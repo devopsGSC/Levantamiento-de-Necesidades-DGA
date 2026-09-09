@@ -25,12 +25,14 @@ public static class Estados
     public static bool PuedeDescartar(byte estadoId) => estadoId == GuardadoBorrador;
 
     /// <summary>
-    /// El Progreso (%) ya no se deriva del Estado — es el % de ítems marcados como
-    /// completados en la solicitud (ver <see cref="ItemCompletado"/>). Este helper solo
-    /// calcula ese porcentaje a partir de los conteos.
+    /// El Progreso (%) ya no se deriva del Estado — es el % de ítems "resueltos" en la
+    /// solicitud (marcados como completados o denegados — ver <see cref="ItemCompletado"/> y
+    /// <see cref="ItemDenegado"/>). Este helper solo calcula ese porcentaje a partir de los
+    /// conteos; un ítem denegado cuenta igual que uno completado para no frenar el avance de
+    /// la solicitud por un ítem puntual que no aplicaba.
     /// </summary>
-    public static byte CalcularProgreso(int totalItems, int itemsCompletados) =>
-        (byte)(totalItems == 0 ? 0 : (int)Math.Round(100.0 * itemsCompletados / totalItems));
+    public static byte CalcularProgreso(int totalItems, int itemsResueltos) =>
+        (byte)(totalItems == 0 ? 0 : (int)Math.Round(100.0 * itemsResueltos / totalItems));
 
     /// <summary>La Unidad Ejecutora de cada ítem y el checklist de completado solo se
     /// gestionan mientras la solicitud está Aprobada o En Proceso — antes de Aprobado el

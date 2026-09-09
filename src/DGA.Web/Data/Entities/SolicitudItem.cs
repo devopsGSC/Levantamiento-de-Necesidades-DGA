@@ -71,6 +71,18 @@ public class SolicitudItem
     public DateTime? FechaCompletado { get; set; }
     public int? CompletadoPorUsuarioId { get; set; }
 
+    /// <summary>Un ítem puntual de la solicitud puede no aplicar (ej. de 6 ítems, uno no
+    /// corresponde) sin tener que denegar toda la solicitud — el resto sigue su curso normal.
+    /// Mutuamente excluyente con <see cref="Completado"/>. Cuenta como "resuelto" para el
+    /// Progreso (%) de la solicitud, igual que Completado — ver <see cref="Data.ItemDenegado"/>.</summary>
+    public bool Denegado { get; set; }
+
+    /// <summary>Motivo obligatorio al denegar — es lo único que ve el dueño de la solicitud,
+    /// sin que el admin tenga que hacer nada más (queda también en la bitácora).</summary>
+    public string? MotivoDenegacion { get; set; }
+    public DateTime? FechaDenegado { get; set; }
+    public int? DenegadoPorUsuarioId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -82,6 +94,7 @@ public class SolicitudItem
     public Prioridad Prioridad { get; set; } = null!;
     public UnidadEjecutora? UnidadEjecutora { get; set; }
     public ApplicationUser? CompletadoPorUsuario { get; set; }
+    public ApplicationUser? DenegadoPorUsuario { get; set; }
 
     public ICollection<SolicitudItemFotografia> Fotografias { get; set; } = new List<SolicitudItemFotografia>();
 }

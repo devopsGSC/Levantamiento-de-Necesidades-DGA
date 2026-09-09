@@ -6,7 +6,9 @@ namespace DGA.Web.Data;
 /// Marca un <see cref="SolicitudItem"/> como completado/no completado y arma la entrada de
 /// bitácora correspondiente. Compartido entre el panel de Admin (puede tocar cualquier ítem)
 /// y "Mis Requerimientos" (solo los ítems de su propia Unidad Ejecutora) para no duplicar la
-/// validación ni el recálculo del Progreso de la solicitud.
+/// validación ni el recálculo del Progreso de la solicitud. A diferencia de
+/// <see cref="ItemDenegado"/>, acá el comentario es opcional — no hace falta justificar que
+/// un ítem se completó.
 /// </summary>
 public static class ItemCompletado
 {
@@ -21,9 +23,9 @@ public static class ItemCompletado
         {
             return (false, "Asigná una Unidad Ejecutora al ítem antes de marcarlo.", null);
         }
-        if (string.IsNullOrWhiteSpace(comentario))
+        if (completado && item.Denegado)
         {
-            return (false, "Ingresá un comentario para este cambio — queda registrado en la bitácora.", null);
+            return (false, "Este ítem está denegado (no aplica) — quitale la denegación antes de marcarlo como completado.", null);
         }
         if (completado == item.Completado)
         {
@@ -36,7 +38,7 @@ public static class ItemCompletado
         item.UpdatedAt = DateTime.UtcNow;
 
         var solicitud = item.Solicitud;
-        solicitud.Progreso = Estados.CalcularProgreso(solicitud.Items.Count, solicitud.Items.Count(i => i.Completado));
+        solicitud.Progreso = Estados.CalcularProgreso(solicitud.Items.Count, solicitud.Items.Count(i => i.Completado || i.Denegado));
         solicitud.UpdatedAt = DateTime.UtcNow;
 
         var historial = new SolicitudHistorial
@@ -45,7 +47,7 @@ public static class ItemCompletado
             SolicitudItemId = item.Id,
             ItemCompletado = completado,
             UsuarioCambioId = usuarioId,
-            Comentario = comentario.Trim(),
+            Comentario = string.IsNullOrWhiteSpace(comentario) ? null : comentario.Trim(),
             FechaCambio = DateTime.UtcNow,
         };
         return (true, null, historial);

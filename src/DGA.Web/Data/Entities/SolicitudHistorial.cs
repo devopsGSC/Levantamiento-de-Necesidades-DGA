@@ -1,12 +1,14 @@
 namespace DGA.Web.Data.Entities;
 
 /// <summary>
-/// Bitácora de cambios de la solicitud. Cubre dos tipos de evento, que se distinguen por
+/// Bitácora de cambios de la solicitud. Cubre tres tipos de evento, que se distinguen por
 /// qué campos vienen completos:
 /// - Cambio de Estado de la solicitud: <see cref="EstadoNuevoId"/> (y opcionalmente
 ///   <see cref="EstadoAnteriorId"/>) completos, <see cref="SolicitudItemId"/> null.
 /// - Ítem marcado/desmarcado como completado: <see cref="SolicitudItemId"/> e
 ///   <see cref="ItemCompletado"/> completos, <see cref="EstadoNuevoId"/> null.
+/// - Ítem denegado/vuelto a habilitar: <see cref="SolicitudItemId"/> e
+///   <see cref="ItemDenegado"/> completos, <see cref="EstadoNuevoId"/> null.
 /// </summary>
 public class SolicitudHistorial
 {
@@ -17,8 +19,11 @@ public class SolicitudHistorial
 
     public int? SolicitudItemId { get; set; }
     /// <summary>true = el ítem se marcó como completado; false = se desmarcó. Null si este
-    /// evento no es sobre un ítem.</summary>
+    /// evento no es sobre completar un ítem.</summary>
     public bool? ItemCompletado { get; set; }
+    /// <summary>true = el ítem se marcó como denegado (no aplica); false = se le quitó la
+    /// denegación. Null si este evento no es sobre denegar un ítem.</summary>
+    public bool? ItemDenegado { get; set; }
 
     public int? UsuarioCambioId { get; set; }
 

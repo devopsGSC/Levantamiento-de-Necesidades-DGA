@@ -148,6 +148,7 @@ public class AdminSolicitudesController(
             .Include(s => s.Items).ThenInclude(i => i.Fotografias)
             .Include(s => s.Items).ThenInclude(i => i.UnidadEjecutora)
             .Include(s => s.Items).ThenInclude(i => i.CompletadoPorUsuario)
+            .Include(s => s.Items).ThenInclude(i => i.DenegadoPorUsuario)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoAnterior)
             .Include(s => s.Historial).ThenInclude(h => h.EstadoNuevo)
             .Include(s => s.Historial).ThenInclude(h => h.SolicitudItem)
@@ -213,6 +214,10 @@ public class AdminSolicitudesController(
                 Completado = i.Completado,
                 FechaCompletado = i.FechaCompletado,
                 CompletadoPor = i.CompletadoPorUsuario?.Nombre,
+                Denegado = i.Denegado,
+                MotivoDenegacion = i.MotivoDenegacion,
+                FechaDenegado = i.FechaDenegado,
+                DenegadoPor = i.DenegadoPorUsuario?.Nombre,
             }).ToList(),
             Historial = solicitud.Historial.OrderByDescending(h => h.FechaCambio).Select(h => new SolicitudHistorialItemViewModel
             {
@@ -220,6 +225,7 @@ public class AdminSolicitudesController(
                 EstadoNuevo = h.EstadoNuevo?.Nombre,
                 NumeroItem = h.SolicitudItem?.NumeroItem,
                 ItemCompletado = h.ItemCompletado,
+                ItemDenegado = h.ItemDenegado,
                 UsuarioCambio = h.UsuarioCambio != null ? h.UsuarioCambio.Nombre : null,
                 Comentario = h.Comentario,
                 FechaCambio = h.FechaCambio,
@@ -275,6 +281,31 @@ public class AdminSolicitudesController(
         db.SolicitudHistorial.Add(historial!);
         await db.SaveChangesAsync();
         TempData["Mensaje"] = $"Ítem #{item.NumeroItem} {(completado ? "marcado" : "desmarcado")} como completado.";
+        return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+    }
+
+    [HttpPost("Items/MarcarDenegado")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarItemDenegado(int itemId, bool denegado, string? comentario)
+    {
+        var item = await db.SolicitudItems
+            .Include(i => i.Solicitud).ThenInclude(s => s.Items)
+            .FirstOrDefaultAsync(i => i.Id == itemId && !i.Solicitud.IsDeleted);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var (ok, error, historial) = ItemDenegado.Marcar(item, denegado, comentario, UsuarioIdActual);
+        if (!ok)
+        {
+            TempData["Error"] = error;
+            return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
+        }
+
+        db.SolicitudHistorial.Add(historial!);
+        await db.SaveChangesAsync();
+        TempData["Mensaje"] = $"Ítem #{item.NumeroItem} {(denegado ? "denegado (no aplica)" : "vuelto a habilitar")}.";
         return RedirectToAction(nameof(Details), new { id = item.SolicitudId });
     }
 

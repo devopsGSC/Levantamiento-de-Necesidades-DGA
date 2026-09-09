@@ -89,7 +89,21 @@
                             <div style="grid-column:1/-1;"><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Justificación del Ítem</div>@item.JustificacionItem</div>
                         }
                         <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Unidad Ejecutora</div>@(item.UnidadEjecutora ?? "Pendiente de asignar")</div>
-                        <div><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Completado</div><span class="status-badge @(item.Completado ? "is-success" : "")">@(item.Completado ? "Sí" : "No")</span></div>
+                        <div>
+                            <div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Estado del Ítem</div>
+                            @if (item.Denegado)
+                            {
+                                <span class="status-badge is-danger">No aplica (denegado)</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge @(item.Completado ? "is-success" : "")">@(item.Completado ? "Completado" : "Pendiente")</span>
+                            }
+                        </div>
+                        @if (item.Denegado && !string.IsNullOrWhiteSpace(item.MotivoDenegacion))
+                        {
+                            <div style="grid-column:1/-1;"><div class="muted" style="color:var(--dga-muted);font-size:11px;text-transform:uppercase;">Motivo de la Denegación</div>@item.MotivoDenegacion</div>
+                        }
                     </div>
                     @if (item.Fotografias.Count == 0)
                     {
@@ -134,6 +148,10 @@
                             @if (h.EstadoNuevo is not null)
                             {
                                 <partial name="_EstadoBadge" model="@(h.EstadoAnterior ?? "—")" /> <text>→</text> <partial name="_EstadoBadge" model="@h.EstadoNuevo" />
+                            }
+                            else if (h.ItemDenegado is not null)
+                            {
+                                <span class="status-badge @(h.ItemDenegado == true ? "is-danger" : "")">Ítem #@h.NumeroItem @(h.ItemDenegado == true ? "denegado (no aplica)" : "vuelto a habilitar")</span>
                             }
                             else
                             {

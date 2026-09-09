@@ -139,6 +139,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .WithMany()
                 .HasForeignKey(i => i.CompletadoPorUsuarioId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(i => i.DenegadoPorUsuario)
+                .WithMany()
+                .HasForeignKey(i => i.DenegadoPorUsuarioId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<SolicitudItemFotografia>()

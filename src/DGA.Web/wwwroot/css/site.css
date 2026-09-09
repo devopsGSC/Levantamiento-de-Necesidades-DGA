@@ -824,6 +824,12 @@ table.item-table .muted { color: var(--dga-muted); }
 .summary-row:last-child { border-bottom: none; }
 .confirm-checkbox { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: 13.5px; }
 .confirm-checkbox input { margin-top: 3px; }
+.confirm-checkbox:has(input:disabled) { opacity: .55; }
+
+/* Recuadro de "Gestión del Ítem" (Unidad Ejecutora + Completado/Denegado) dentro de
+   cada ítem — necesita distinguirse del resto de los campos de solo lectura del ítem. */
+.item-gestion-box { background: var(--dga-muted-bg); border: 1px solid var(--dga-border); border-radius: 10px; padding: 14px 16px; }
+.item-gestion-box__titulo { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--dga-muted); margin-bottom: 10px; }
 
 /* ---------- Panel de Administración ---------- */
 

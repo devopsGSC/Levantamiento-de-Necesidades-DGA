@@ -83,6 +83,13 @@ public class SolicitudDetailItemViewModel
     public bool Completado { get; set; }
     public DateTime? FechaCompletado { get; set; }
     public string? CompletadoPor { get; set; }
+
+    /// <summary>Ítem puntual que no aplica dentro de una solicitud con varios ítems — el
+    /// resto sigue su curso normal. Mutuamente excluyente con <see cref="Completado"/>.</summary>
+    public bool Denegado { get; set; }
+    public string? MotivoDenegacion { get; set; }
+    public DateTime? FechaDenegado { get; set; }
+    public string? DenegadoPor { get; set; }
 }
 
 /// <summary>Foto de un ítem para mostrar en pantalla (vistas de detalle) — se sirve
@@ -104,6 +111,7 @@ public class SolicitudHistorialItemViewModel
     /// ítem, no en cambios de Estado.</summary>
     public int? NumeroItem { get; set; }
     public bool? ItemCompletado { get; set; }
+    public bool? ItemDenegado { get; set; }
 
     /// <summary>Nombre de quién hizo el cambio (dueño de la solicitud, admin, o usuario de la
     /// Unidad Ejecutora delegada, según el caso).</summary>

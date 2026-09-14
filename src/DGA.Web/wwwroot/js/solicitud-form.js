@@ -533,8 +533,9 @@
     ).join('');
     photoChips.querySelectorAll('img.photo-chip__thumb').forEach((img) => {
       img.addEventListener('click', () => {
-        const foto = fotosActuales[Number(img.dataset.idx)];
-        window.dgaLightbox?.(urlPreviewFoto(foto), foto.nombre);
+        const idx = Number(img.dataset.idx);
+        const fotos = fotosActuales.map((f) => ({ src: urlPreviewFoto(f), alt: f.nombre }));
+        window.dgaLightbox?.(fotos, idx);
       });
     });
     photoChips.querySelectorAll('button').forEach((btn) => {

@@ -769,6 +769,20 @@ textarea.form-control { min-height: 88px; resize: vertical; font-family: inherit
   cursor: pointer;
 }
 .lightbox-overlay__close:hover { background: rgba(255, 255, 255, .22); }
+.lightbox-overlay__nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255, 255, 255, .12); border: none; color: #fff; font-size: 18px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.lightbox-overlay__nav:hover { background: rgba(255, 255, 255, .22); }
+.lightbox-overlay__nav--prev { left: 20px; }
+.lightbox-overlay__nav--next { right: 20px; }
+.lightbox-overlay__count {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(255, 255, 255, .12); color: #fff; font-size: 12.5px;
+  padding: 4px 12px; border-radius: 999px;
+}
 
 .item-table-wrap { overflow-x: auto; }
 table.item-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; }

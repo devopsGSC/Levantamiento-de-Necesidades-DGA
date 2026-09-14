@@ -115,7 +115,7 @@
                                 </select>
                                 @if (!Model.PermiteGestionItems)
                                 {
-                                    <p style="color:var(--dga-warning);font-size:11.5px;margin:6px 0 0;">Se podrá asignar recién cuando la solicitud esté Aprobada o En Proceso.</p>
+                                    <p style="color:var(--dga-warning);font-size:11.5px;margin:6px 0 0;">Se podrá asignar cuando la solicitud esté Aprobada o En Proceso.</p>
                                 }
                             </form>
                             <div style="flex:1;min-width:260px;">
@@ -128,7 +128,7 @@
                                         <label class="confirm-checkbox" style="margin-top:0;" title="@(!item.Completado && !item.UnidadEjecutoraId.HasValue ? "Asigná una Unidad Ejecutora para poder marcarlo como completado" : "")">
                                             <input type="checkbox" class="js-item-completado" checked="@item.Completado"
                                                    disabled="@(!Model.PermiteGestionItems || item.Denegado || (!item.Completado && !item.UnidadEjecutoraId.HasValue))" />
-                                            <span>Completado@(item.Completado && item.CompletadoPor is not null ? $" — por {item.CompletadoPor}" : "")@(item.Completado && item.FechaCompletado.HasValue ? " (" + item.FechaCompletado.Value.ASalvador().ToString("dd/MM/yyyy HH:mm") + ")" : "")</span>
+                                            <span>Aplica@(item.Completado && item.CompletadoPor is not null ? $" — por {item.CompletadoPor}" : "")@(item.Completado && item.FechaCompletado.HasValue ? " (" + item.FechaCompletado.Value.ASalvador().ToString("dd/MM/yyyy HH:mm") + ")" : "")</span>
                                         </label>
                                     </form>
                                     <form asp-action="MarcarItemDenegado" method="post" class="item-estado-form">
@@ -213,9 +213,14 @@
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.photo-thumb').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                dgaLightbox('/Solicitudes/Foto?solicitudItemFotografiaId=' + btn.dataset.fotoId, btn.dataset.fotoNombre);
+        document.querySelectorAll('.photo-thumb-grid').forEach((grid) => {
+            const botones = Array.from(grid.querySelectorAll('.photo-thumb'));
+            const fotos = botones.map((b) => ({
+                src: '/Solicitudes/Foto?solicitudItemFotografiaId=' + b.dataset.fotoId,
+                alt: b.dataset.fotoNombre,
+            }));
+            botones.forEach((btn, i) => {
+                btn.addEventListener('click', () => dgaLightbox(fotos, i));
             });
         });
     </script>

@@ -97,7 +97,7 @@
                             }
                             else
                             {
-                                <span class="status-badge @(item.Completado ? "is-success" : "")">@(item.Completado ? "Completado" : "Pendiente")</span>
+                                <span class="status-badge @(item.Completado ? "is-success" : "")">@(item.Completado ? "Aplica" : "Pendiente")</span>
                             }
                         </div>
                         @if (item.Denegado && !string.IsNullOrWhiteSpace(item.MotivoDenegacion))
@@ -171,9 +171,14 @@
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.photo-thumb').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                dgaLightbox('/Solicitudes/Foto?solicitudItemFotografiaId=' + btn.dataset.fotoId, btn.dataset.fotoNombre);
+        document.querySelectorAll('.photo-thumb-grid').forEach((grid) => {
+            const botones = Array.from(grid.querySelectorAll('.photo-thumb'));
+            const fotos = botones.map((b) => ({
+                src: '/Solicitudes/Foto?solicitudItemFotografiaId=' + b.dataset.fotoId,
+                alt: b.dataset.fotoNombre,
+            }));
+            botones.forEach((btn, i) => {
+                btn.addEventListener('click', () => dgaLightbox(fotos, i));
             });
         });
     </script>

@@ -12,6 +12,10 @@
         aduanaValores = Model.PorAduanaValores,
         componenteLabels = Model.PorComponenteLabels,
         componenteValores = Model.PorComponenteValores,
+        subcomponenteLabels = Model.PorSubcomponenteLabels,
+        subcomponenteValores = Model.PorSubcomponenteValores,
+        elementoLabels = Model.PorElementoLabels,
+        elementoValores = Model.PorElementoValores,
     });
 }
 
@@ -45,6 +49,26 @@
                 @foreach (var opcion in Model.ComponenteOptions)
                 {
                     <option value="@opcion.Id" selected="@(Model.FiltroComponenteId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Subcomponente</label>
+            <select name="subcomponenteId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todos los subcomponentes</option>
+                @foreach (var opcion in Model.SubcomponenteOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroSubcomponenteId == opcion.Id)">@opcion.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Necesidad</label>
+            <select name="elementoId" class="form-control" onchange="this.form.submit()">
+                <option value="">Todas las necesidades</option>
+                @foreach (var opcion in Model.ElementoOptions)
+                {
+                    <option value="@opcion.Id" selected="@(Model.FiltroElementoId == opcion.Id)">@opcion.Nombre</option>
                 }
             </select>
         </div>
@@ -216,7 +240,7 @@
         </div>
     </div>
 
-    <h2 class="section-title">Solicitudes por Aduana y Componente</h2>
+    <h2 class="section-title">Solicitudes por Aduana, Componente, Subcomponente y Necesidad</h2>
     <div class="dash-row even" style="margin-bottom:24px;">
         <div class="card chart-card">
             <h3>Por Aduana</h3>
@@ -225,6 +249,16 @@
         <div class="card chart-card">
             <h3>Por Componente</h3>
             <canvas id="chartComponente"></canvas>
+        </div>
+    </div>
+    <div class="dash-row even" style="margin-bottom:24px;">
+        <div class="card chart-card">
+            <h3>Por Subcomponente</h3>
+            <canvas id="chartSubcomponente"></canvas>
+        </div>
+        <div class="card chart-card">
+            <h3>Por Necesidad</h3>
+            <canvas id="chartElemento"></canvas>
         </div>
     </div>
 
@@ -331,6 +365,32 @@
             data: {
                 labels: dashboardData.componenteLabels,
                 datasets: [{ data: dashboardData.componenteValores, backgroundColor: dgaColors[2] }],
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+
+        new Chart(document.getElementById('chartSubcomponente'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.subcomponenteLabels,
+                datasets: [{ data: dashboardData.subcomponenteValores, backgroundColor: dgaColors[3] }],
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+
+        new Chart(document.getElementById('chartElemento'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.elementoLabels,
+                datasets: [{ data: dashboardData.elementoValores, backgroundColor: dgaColors[4] }],
             },
             options: {
                 indexAxis: 'y',

@@ -6,6 +6,8 @@ public class DashboardViewModel
 
     public int? FiltroAduanaId { get; set; }
     public byte? FiltroComponenteId { get; set; }
+    public int? FiltroSubcomponenteId { get; set; }
+    public int? FiltroElementoId { get; set; }
     public byte? FiltroEstadoId { get; set; }
     public byte? FiltroPrioridadId { get; set; }
     public byte? FiltroUnidadEjecutoraId { get; set; }
@@ -13,12 +15,15 @@ public class DashboardViewModel
     public DateTime? FiltroFechaHasta { get; set; }
     public List<OpcionCatalogo> AduanaOptions { get; set; } = new();
     public List<OpcionCatalogo> ComponenteOptions { get; set; } = new();
+    public List<OpcionCatalogo> SubcomponenteOptions { get; set; } = new();
+    public List<OpcionCatalogo> ElementoOptions { get; set; } = new();
     public List<OpcionCatalogo> EstadoOptions { get; set; } = new();
     public List<OpcionCatalogo> PrioridadOptions { get; set; } = new();
     public List<OpcionCatalogo> UnidadEjecutoraOptions { get; set; } = new();
 
     public bool TieneFiltrosActivos =>
-        FiltroAduanaId.HasValue || FiltroComponenteId.HasValue || FiltroEstadoId.HasValue ||
+        FiltroAduanaId.HasValue || FiltroComponenteId.HasValue || FiltroSubcomponenteId.HasValue ||
+        FiltroElementoId.HasValue || FiltroEstadoId.HasValue ||
         FiltroPrioridadId.HasValue || FiltroUnidadEjecutoraId.HasValue ||
         FiltroFechaDesde.HasValue || FiltroFechaHasta.HasValue;
 
@@ -47,6 +52,12 @@ public class DashboardViewModel
 
     public List<string> PorComponenteLabels { get; set; } = new();
     public List<int> PorComponenteValores { get; set; } = new();
+
+    public List<string> PorSubcomponenteLabels { get; set; } = new();
+    public List<int> PorSubcomponenteValores { get; set; } = new();
+
+    public List<string> PorElementoLabels { get; set; } = new();
+    public List<int> PorElementoValores { get; set; } = new();
 
     public List<DashboardSolicitudReciente> SolicitudesRecientes { get; set; } = new();
 }

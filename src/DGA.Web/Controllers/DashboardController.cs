@@ -20,6 +20,10 @@ file class SolicitudResumen
     public byte Progreso { get; set; }
     public byte? PrimerComponenteId { get; set; }
     public string PrimerComponente { get; set; } = "Sin componente";
+    public int? PrimerSubcomponenteId { get; set; }
+    public string PrimerSubcomponente { get; set; } = "Sin subcomponente";
+    public int? PrimerElementoId { get; set; }
+    public string PrimeraNecesidad { get; set; } = "Sin necesidad";
     public byte? PrimeraPrioridadId { get; set; }
     public string PrimeraPrioridad { get; set; } = "-";
 }
@@ -30,7 +34,7 @@ public class DashboardController(ApplicationDbContext db) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
-        int? aduanaId, byte? componenteId, byte? estadoId, byte? prioridadId,
+        int? aduanaId, byte? componenteId, int? subcomponenteId, int? elementoId, byte? estadoId, byte? prioridadId,
         byte? unidadEjecutoraId, DateTime? fechaDesde, DateTime? fechaHasta)
     {
         var query = db.Solicitudes.Where(s => !s.IsDeleted);
@@ -41,6 +45,14 @@ public class DashboardController(ApplicationDbContext db) : Controller
         if (componenteId.HasValue)
         {
             query = query.Where(s => s.Items.Any(i => i.ComponenteId == componenteId.Value));
+        }
+        if (subcomponenteId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.SubcomponenteId == subcomponenteId.Value));
+        }
+        if (elementoId.HasValue)
+        {
+            query = query.Where(s => s.Items.Any(i => i.ElementoId == elementoId.Value));
         }
         if (estadoId.HasValue)
         {
@@ -77,15 +89,39 @@ public class DashboardController(ApplicationDbContext db) : Controller
                 Progreso = s.Progreso ?? 0,
                 PrimerComponenteId = s.Items.OrderBy(i => i.NumeroItem).Select(i => (byte?)i.ComponenteId).FirstOrDefault(),
                 PrimerComponente = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Componente.Nombre).FirstOrDefault() ?? "Sin componente",
+                PrimerSubcomponenteId = s.Items.OrderBy(i => i.NumeroItem).Select(i => (int?)i.SubcomponenteId).FirstOrDefault(),
+                PrimerSubcomponente = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Subcomponente.Nombre).FirstOrDefault() ?? "Sin subcomponente",
+                PrimerElementoId = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.ElementoId).FirstOrDefault(),
+                PrimeraNecesidad = s.Items.OrderBy(i => i.NumeroItem)
+                    .Select(i => i.Elemento != null ? i.Elemento.Nombre : i.ElementoLibre)
+                    .FirstOrDefault() ?? "Sin necesidad",
                 PrimeraPrioridadId = s.Items.OrderBy(i => i.NumeroItem).Select(i => (byte?)i.PrioridadId).FirstOrDefault(),
                 PrimeraPrioridad = s.Items.OrderBy(i => i.NumeroItem).Select(i => i.Prioridad.Nombre).FirstOrDefault() ?? "-",
             })
             .ToListAsync();
 
+        var subcomponentesQuery = db.Subcomponentes.AsQueryable();
+        if (componenteId.HasValue)
+        {
+            subcomponentesQuery = subcomponentesQuery.Where(sc => sc.ComponenteId == componenteId.Value);
+        }
+
+        var elementosQuery = db.Elementos.AsQueryable();
+        if (subcomponenteId.HasValue)
+        {
+            elementosQuery = elementosQuery.Where(e => e.SubcomponenteId == subcomponenteId.Value);
+        }
+        else if (componenteId.HasValue)
+        {
+            elementosQuery = elementosQuery.Where(e => e.Subcomponente.ComponenteId == componenteId.Value);
+        }
+
         var vm = new DashboardViewModel
         {
             FiltroAduanaId = aduanaId,
             FiltroComponenteId = componenteId,
+            FiltroSubcomponenteId = subcomponenteId,
+            FiltroElementoId = elementoId,
             FiltroEstadoId = estadoId,
             FiltroPrioridadId = prioridadId,
             FiltroUnidadEjecutoraId = unidadEjecutoraId,
@@ -95,6 +131,10 @@ public class DashboardController(ApplicationDbContext db) : Controller
                 .Select(a => new OpcionCatalogo(a.Id, a.Codigo + " - " + a.Nombre)).ToListAsync(),
             ComponenteOptions = await db.Componentes.OrderBy(c => c.Orden)
                 .Select(c => new OpcionCatalogo(c.Id, c.Nombre)).ToListAsync(),
+            SubcomponenteOptions = await subcomponentesQuery.OrderBy(sc => sc.Orden)
+                .Select(sc => new OpcionCatalogo(sc.Id, sc.Nombre)).ToListAsync(),
+            ElementoOptions = await elementosQuery.OrderBy(e => e.Orden)
+                .Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
             EstadoOptions = await db.EstadosSolicitud.OrderBy(e => e.Orden)
                 .Select(e => new OpcionCatalogo(e.Id, e.Nombre)).ToListAsync(),
             PrioridadOptions = await db.Prioridades.OrderBy(p => p.Orden)
@@ -159,6 +199,14 @@ public class DashboardController(ApplicationDbContext db) : Controller
         var porComponente = filas.GroupBy(f => f.PrimerComponente).OrderByDescending(g => g.Count()).ToList();
         vm.PorComponenteLabels = porComponente.Select(g => g.Key).ToList();
         vm.PorComponenteValores = porComponente.Select(g => g.Count()).ToList();
+
+        var porSubcomponente = filas.GroupBy(f => f.PrimerSubcomponente).OrderByDescending(g => g.Count()).Take(10).ToList();
+        vm.PorSubcomponenteLabels = porSubcomponente.Select(g => g.Key).ToList();
+        vm.PorSubcomponenteValores = porSubcomponente.Select(g => g.Count()).ToList();
+
+        var porElemento = filas.GroupBy(f => f.PrimeraNecesidad).OrderByDescending(g => g.Count()).Take(10).ToList();
+        vm.PorElementoLabels = porElemento.Select(g => g.Key).ToList();
+        vm.PorElementoValores = porElemento.Select(g => g.Count()).ToList();
 
         var tendenciaHasta = fechaHasta?.Date ?? DateTime.UtcNow.Date;
         var tendenciaDesde = fechaDesde?.Date ?? tendenciaHasta.AddDays(-13);
